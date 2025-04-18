@@ -64,7 +64,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
 
 3. Check the status of your hidden service:
    ```
-   docker-compose logs tor
+   docker-compose logs -f tor
    ```
 
 Quick test command:
