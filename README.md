@@ -33,7 +33,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/OnionDock.git
+   git clone https://github.com/tn3w/OnionDock.git
    cd OnionDock
    ```
 
