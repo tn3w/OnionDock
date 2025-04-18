@@ -69,7 +69,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
 
 Quick test command:
 ```bash
-cd ~/OnionDock && sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && sudo docker-compose down && sudo docker-compose up -d
+sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && sudo docker-compose down && sudo docker-compose up -d
 ```
 
 ## Usage Examples
