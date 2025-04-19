@@ -38,24 +38,14 @@ COPY config/torrc /etc/tor/torrc
 COPY config/vanguards.conf /etc/tor/vanguards.conf
 
 COPY start.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/start.sh
+COPY entrypoint.sh /usr/local/bin/
 
 RUN mkdir -p /tmp/vanguards_logs
 
 RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d /var/lib/hidden_service && \
     chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh /usr/local/lib/vanguards /tmp/vanguards_logs /var/lib/hidden_service && \
     chmod -R 700 /var/lib/tor /var/lib/hidden_service && \
-    chmod 755 /usr/local/bin/start.sh
-
-RUN echo '#!/bin/bash\n\
-# Fix permissions on mounted volumes\n\
-chown -R tor:tor /var/lib/tor /var/lib/hidden_service\n\
-chmod -R 700 /var/lib/tor /var/lib/hidden_service\n\
-\n\
-# Switch to tor user and run the original command\n\
-exec su -s /bin/bash tor -c "/usr/local/bin/start.sh"\n\
-' > /usr/local/bin/entrypoint.sh && \
-chmod +x /usr/local/bin/entrypoint.sh
+    chmod 755 /usr/local/bin/start.sh /usr/local/bin/entrypoint.sh
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=20s \
     CMD torify curl -f http://localhost:80 || exit 1
