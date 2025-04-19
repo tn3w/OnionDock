@@ -41,7 +41,7 @@ sudo apt install -y git
 
 # Install Docker
 sudo apt install -y docker.io
-sudo apt install -y docker-compose
+sudo apt install -y docker-compose python3-distutils
 sudo apt install -y docker-buildx
 sudo usermod -aG docker $USER
 sudo systemctl enable --now docker
