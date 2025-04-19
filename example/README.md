@@ -36,25 +36,31 @@ Follow these steps to deploy the example application:
 
 ### Steps
 
-1. Make sure the data directory for Tor's hidden service exists:
+1. Clone the repository:
 
 ```bash
-mkdir -p data/tor/hidden_service
+git clone https://github.com/tn3w/OnionDock.git
 ```
 
-2. Ensure the Tor configuration is properly set up:
+2. Build the Docker image:
+
+```bash
+docker build -t oniondock -f tor/Dockerfile tor/
+```
+
+3. Ensure the Tor configuration is properly set up:
 
 ```bash
 cp torrc.example ../tor/config/torrc
 ```
 
-3. Deploy the application:
+4. Deploy the application:
 
 ```bash
 docker-compose up -d
 ```
 
-4. View your Tor hidden service address:
+5. View your Tor hidden service address:
 
 ```bash
 docker-compose logs tor | grep "Tor hidden service at" 
@@ -62,7 +68,7 @@ docker-compose logs tor | grep "Tor hidden service at"
 
 You should see a line similar to:
 ```
-tor_1    | [+] Hidden service created: abcdefghijklmnopqrstuvwxyz1234567890.onion
+tor_1    | [+] Tor hidden service at: abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrst.onion
 ```
 
 This `.onion` address is where your application is accessible over the Tor network.
@@ -72,7 +78,7 @@ This `.onion` address is where your application is accessible over the Tor netwo
 For a quick deployment, you can use this one-line command that handles the necessary steps:
 
 ```bash
-mkdir -p data/tor/hidden_service && cp torrc.example ../tor/config/torrc && docker-compose up -d && echo "Waiting for hidden service to be created..." && sleep 10 && docker-compose logs tor | grep "Hidden service created"
+git clone https://github.com/tn3w/OnionDock.git && cd OnionDock/example && docker-compose down && docker-compose up --build -d && docker-compose logs -f
 ```
 
 ### Accessing the Application

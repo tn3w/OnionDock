@@ -7,12 +7,8 @@ services:
       context: ../tor
       dockerfile: Dockerfile
     volumes:
-      - ./data/tor/hidden_service:/var/lib/tor/hidden_service
-      - ../tor/config:/etc/tor
-    environment:
-      - TOR_THREADS=4
-      - HIDDEN_SERVICE_PORT=80
-      - SECURITY_LEVEL=high
+      - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
+      - ../tor/config:/etc/tor:ro
     restart: unless-stopped
     networks:
       - onion_network
@@ -25,7 +21,7 @@ services:
       context: ./app
       dockerfile: Dockerfile
     volumes:
-      - ./app:/app
+      - ./app:/app:ro
     networks:
       - onion_network
     restart: unless-stopped

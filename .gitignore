@@ -1,2 +1,2 @@
-tor/hidden_service/*
-example/data/tor/hidden_service/*
+# Hidden service files
+**/tor/hidden_service
