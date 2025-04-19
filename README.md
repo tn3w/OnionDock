@@ -29,6 +29,24 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
 - Docker and Docker Compose installed on your system
 - Basic understanding of Docker containers and networks
 
+#### Installing Prerequisites on Ubuntu/Debian
+
+```bash
+# Update package lists
+sudo apt update
+sudo apt upgrade -y
+
+# Install Git
+sudo apt install -y git
+
+# Install Docker
+sudo apt install -y docker.io
+sudo apt install -y docker-compose
+sudo apt install -y docker-buildx
+sudo usermod -aG docker $USER
+sudo systemctl enable --now docker
+```
+
 ### Quick Start
 
 1. Clone this repository and enter the directory:
@@ -126,14 +144,37 @@ OnionDock consists of the following components:
 
 ## Configuration Options
 
+### Adding Tor Port Forward
+
+To forward traffic from your Tor hidden service to your web application, add the following configuration to your `torrc` file:
+
+```t
+# ...
+HiddenServiceDir /var/lib/tor/hidden_service
+HiddenServiceVersion 3
+
+# For example, if your docker container named "webapp" is running on port 8080 and you want to forward http traffic to it
+HiddenServicePort 80 webapp:8080
+# ...
+```
+
+### Security Level
+
 OnionDock can be customized through environment variables:
 
-- `TOR_THREADS`: Number of threads for Tor (default: auto-detected)
-- `HIDDEN_SERVICE_PORT`: The port to expose (default: 80)
 - `SECURITY_LEVEL`: Level of security guards (default: high)
   - `high`: All security components enabled, running in parallel
   - `medium`: Basic security components without circuit build time verification
   - `low`: Minimal security with only vanguards layer protection
+
+Example docker-compose.yml:
+```yaml
+services:
+  tor:
+    # ...
+    environment:
+      - SECURITY_LEVEL=high
+```
 
 ## Contributing
 
