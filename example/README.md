@@ -12,12 +12,12 @@ This is a simple example of deploying a Python Flask application as a Tor hidden
 
 ```
 example/
-├── app/                   # The Flask application
-│   ├── app.py             # Main application code
-│   ├── Dockerfile         # Docker configuration for the app
-│   ├── requirements.txt   # Python dependencies
-│   └── templates/         # HTML templates
-│       └── index.html     # The page that displays "Hello, Tor!"
-├── docker-compose.yml     # Docker Compose configuration
-└── README.md              # This file
+├── app/                    # The Flask application
+│   ├── app.py              # Main application code
+│   ├── requirements.txt    # Python dependencies
+│   └── templates/          # HTML templates
+│       └── index.html      # The page that displays "Hello, Tor!"
+├── Dockerfile              # Docker configuration for the app
+├── docker-compose.yml      # Docker Compose configuration
+└── README.md               # This file
 ```
