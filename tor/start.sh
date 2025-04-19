@@ -9,9 +9,7 @@ VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
 OTHER_OPTIONS="--control_port 9051"
 VANGUARDS_CONFIG="/etc/tor/vanguards.conf"
 
-echo "[+] Starting OnionDock with security level: $SECURITY_LEVEL"
-echo "[+] Using $TOR_THREADS Tor threads"
-echo "[+] Running vanguards with PyPy"
+echo "[+] Starting OnionDock: $SECURITY_LEVEL security, $TOR_THREADS threads"
 
 if [ "$(id -u)" = "0" ]; then
     echo "[+] Running as root, fixing permissions..."
@@ -21,34 +19,14 @@ if [ "$(id -u)" = "0" ]; then
 fi
 
 cp /etc/tor/torrc /tmp/torrc
-sed "s/{{TOR_THREADS}}/$TOR_THREADS/g" /tmp/torrc > /tmp/torrc.tmp && mv /tmp/torrc.tmp /tmp/torrc
-sed "s/{{HIDDEN_SERVICE_PORT}}/$HIDDEN_SERVICE_PORT/g" /tmp/torrc > /tmp/torrc.tmp && mv /tmp/torrc.tmp /tmp/torrc
+sed -i "s/{{TOR_THREADS}}/$TOR_THREADS/g; s/{{HIDDEN_SERVICE_PORT}}/$HIDDEN_SERVICE_PORT/g" /tmp/torrc
 
 if [ -f "/etc/tor/vanguards.conf" ]; then
     cp /etc/tor/vanguards.conf /tmp/vanguards.conf
     echo "[+] Using vanguards configuration from /etc/tor/vanguards.conf"
 fi
 
-if [ ! -f /var/lib/tor/hidden_service/hostname ]; then
-    echo "[+] First run, generating hidden service..."
-    tor -f /tmp/torrc &
-    TOR_PID=$!
-
-    while [ ! -f /var/lib/tor/hidden_service/hostname ]; do
-        sleep 1
-    done
-
-    ONION_ADDRESS=$(cat /var/lib/tor/hidden_service/hostname)
-    echo "[+] Hidden service created: $ONION_ADDRESS"
-
-    kill $TOR_PID
-    wait $TOR_PID || true
-fi
-
-ONION_ADDRESS=$(cat /var/lib/tor/hidden_service/hostname)
-echo "[+] Starting Tor hidden service at: $ONION_ADDRESS"
-echo "[+] Port $HIDDEN_SERVICE_PORT is being forwarded to the hidden service"
-
+echo "[+] Starting Tor hidden service..."
 tor -f /tmp/torrc &
 TOR_PID=$!
 
@@ -58,18 +36,18 @@ mkdir -p /var/lib/tor
 chmod 700 /var/lib/tor
 
 while true; do
-    if grep -q "Bootstrapped 100" /var/lib/tor/notices.log 2> /dev/null; then
-        echo "[+] Tor has bootstrapped 100%"
+    if grep -q "Bootstrapped 100" /var/lib/tor/notices.log 2>/dev/null || ! kill -0 $TOR_PID 2>/dev/null; then
         break
     fi
-
-    if ! kill -0 $TOR_PID 2> /dev/null; then
-        echo "[!] Tor process is not running anymore. Continuing anyway..."
-        break
-    fi
-
     sleep 1
 done
+
+if [ -f /var/lib/tor/hidden_service/hostname ]; then
+    ONION_ADDRESS=$(cat /var/lib/tor/hidden_service/hostname)
+    echo "[+] Tor hidden service: $ONION_ADDRESS (port $HIDDEN_SERVICE_PORT)"
+else
+    echo "[!] Hidden service hostname file not found after bootstrap"
+fi
 
 VANGUARDS_STATE_DIR="/var/lib/tor/vanguards_state"
 mkdir -p $VANGUARDS_STATE_DIR
@@ -81,41 +59,40 @@ LOG_FILE="/var/lib/tor/notices.log"
 touch $LOG_FILE
 chmod 644 $LOG_FILE
 
-(tail -n 0 -F $LOG_FILE | grep -v "CIRCUIT_IS_CONFLUX" | grep -v "circ->purpose == CIRCUIT_PURPOSE_CONFLUX_UNLINKED" &)
+(tail -n 0 -F $LOG_FILE | grep -v "CIRCUIT_IS_CONFLUX\|circ->purpose == CIRCUIT_PURPOSE_CONFLUX_UNLINKED" &)
 LOG_MONITOR_PID=$!
 
 run_vanguards() {
-    local name="$1"
-    shift
-    cd $VANGUARDS_STATE_DIR
+    if [ -f "/tmp/vanguards_$1.pid" ]; then
+        return
+    fi
     
-    local options="$*"
-    echo "[+] Starting vanguards-$name with options: $options"
-    
-    $VANGUARDS_LOCATION --state "$VANGUARDS_STATE_DIR/$name.state" --logfile "$LOG_FILE" --config "/tmp/vanguards.conf" $options &
-    local pid=$!
-    echo $pid > "/tmp/vanguards_$name.pid"
-    return 0
+    (
+        cd $VANGUARDS_STATE_DIR && 
+        $VANGUARDS_LOCATION \
+            --state "$VANGUARDS_STATE_DIR/$1.state" \
+            --logfile "$LOG_FILE" \
+            --config "/tmp/vanguards.conf" \
+            --control_port 9051 \
+            "${@:2}" &
+        echo $! > "/tmp/vanguards_$1.pid"
+    )
 }
 
-if [[ "$SECURITY_LEVEL" == "high" ]]; then
-    echo "[+] Starting vanguards instances in parallel with high security settings"
-
-    run_vanguards "guards" --disable_bandguards --disable_rendguard --control_port 9051 &
-    run_vanguards "band" --disable_vanguards --disable_rendguard --control_port 9051 &
-    run_vanguards "rend" --disable_vanguards --disable_bandguards --control_port 9051 &
-
-elif [[ "$SECURITY_LEVEL" == "medium" ]]; then
-    echo "[+] Starting vanguards instances in parallel with medium security settings"
-
-    run_vanguards "guards" --disable_bandguards --disable_rendguard --disable_cbtverify --control_port 9051 &
-    run_vanguards "band" --disable_vanguards --disable_rendguard --disable_cbtverify --control_port 9051 &
-
-elif [[ "$SECURITY_LEVEL" == "low" ]]; then
-    echo "[+] Starting vanguards instance with basic security settings"
-
-    run_vanguards "guards" --disable_bandguards --disable_rendguard --disable_cbtverify --control_port 9051 &
-fi
+case "$SECURITY_LEVEL" in
+    high)
+        run_vanguards "guards" --disable_bandguards --disable_rendguard &
+        run_vanguards "band" --disable_vanguards --disable_rendguard &
+        run_vanguards "rend" --disable_vanguards --disable_bandguards &
+        ;;
+    medium)
+        run_vanguards "guards" --disable_bandguards --disable_rendguard --disable_cbtverify &
+        run_vanguards "band" --disable_vanguards --disable_rendguard --disable_cbtverify &
+        ;;
+    *)
+        run_vanguards "guards" --disable_bandguards --disable_rendguard --disable_cbtverify &
+        ;;
+esac
 
 cd /
 
