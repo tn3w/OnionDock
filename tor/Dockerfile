@@ -41,6 +41,13 @@ RUN chmod +x /usr/local/bin/start.sh
 
 RUN mkdir -p /tmp/vanguards_logs
 
+RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d && \
+    chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh /usr/local/lib/vanguards /tmp/vanguards_logs && \
+    chmod -R 700 /var/lib/tor && \
+    chmod 755 /usr/local/bin/start.sh
+
+USER tor
+
 HEALTHCHECK --interval=60s --timeout=15s --start-period=20s \
     CMD torify curl -f http://localhost:80 || exit 1
 
