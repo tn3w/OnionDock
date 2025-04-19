@@ -6,7 +6,8 @@ RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/reposi
 RUN apk add --no-cache \
     python3 py3-pip bash git \
     tor \
-    pypy3
+    pypy3 \
+    shadow
 
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
@@ -46,9 +47,17 @@ RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d /var/lib/hidden_servic
     chmod -R 700 /var/lib/tor /var/lib/hidden_service && \
     chmod 755 /usr/local/bin/start.sh
 
-USER tor
+RUN echo '#!/bin/bash\n\
+# Fix permissions on mounted volumes\n\
+chown -R tor:tor /var/lib/tor /var/lib/hidden_service\n\
+chmod -R 700 /var/lib/tor /var/lib/hidden_service\n\
+\n\
+# Switch to tor user and run the original command\n\
+exec su -s /bin/bash tor -c "/usr/local/bin/start.sh"\n\
+' > /usr/local/bin/entrypoint.sh && \
+chmod +x /usr/local/bin/entrypoint.sh
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=20s \
     CMD torify curl -f http://localhost:80 || exit 1
 
-CMD ["/usr/local/bin/start.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
