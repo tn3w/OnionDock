@@ -1,5 +1,2 @@
 tor/hidden_service/*
-!tor/hidden_service/.gitkeep
-
 example/data/tor/hidden_service/*
-!example/data/tor/hidden_service/.gitkeep

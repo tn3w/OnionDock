@@ -1,12 +1,19 @@
 FROM alpine:latest
 
+RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
+    apk update
+
 RUN apk add --no-cache \
     python3 py3-pip bash git \
-    build-base automake autoconf libtool pkgconfig libevent-dev openssl-dev zlib-dev xz-dev
+    build-base automake autoconf libtool pkgconfig libevent-dev openssl-dev zlib-dev xz-dev \
+    pypy3
 
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 RUN pip install --no-cache-dir stem
+
+RUN pypy3 -m venv /pypy_venv
+ENV PYPY_PATH="/pypy_venv/bin"
 
 RUN mkdir -p /usr/src/tor && \
     cd /usr/src/tor && \
@@ -33,9 +40,11 @@ RUN git clone https://github.com/mikeperry-tor/vanguards.git /tmp/vanguards && \
     # Fix readfp issue (line 224)
     sed -i 's/config.readfp(open(config_file, "r"))/config.read_file(open(config_file, "r"))/' \
         /tmp/vanguards/src/vanguards/config.py && \
-    pip install . && \
+    $PYPY_PATH/pip install . && \
     cp -r /tmp/vanguards/* /usr/local/lib/vanguards/ && \
     rm -rf /tmp/vanguards
+
+ENV PATH="/pypy_venv/bin:$PATH"
 
 COPY config/torrc /etc/tor/torrc
 COPY config/vanguards.conf /etc/tor/vanguards.conf

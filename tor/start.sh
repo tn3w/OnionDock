@@ -5,12 +5,13 @@ IFS=$'\n\t'
 TOR_THREADS=${TOR_THREADS:-$(nproc)}
 HIDDEN_SERVICE_PORT=${HIDDEN_SERVICE_PORT:-80}
 SECURITY_LEVEL=${SECURITY_LEVEL:-high}
-VANGUARDS_LOCATION=$(which vanguards)
+VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
 OTHER_OPTIONS="--control_port 9051"
 VANGUARDS_CONFIG="/etc/tor/vanguards.conf"
 
 echo "[+] Starting OnionDock with security level: $SECURITY_LEVEL"
 echo "[+] Using $TOR_THREADS Tor threads"
+echo "[+] Running vanguards with PyPy"
 
 if [ "$(id -u)" = "0" ]; then
     echo "[+] Running as root, fixing permissions..."
