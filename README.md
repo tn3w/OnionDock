@@ -72,6 +72,16 @@ Quick test command:
 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && sudo docker-compose down && sudo docker-compose up -d && docker-compose logs -f
 ```
 
+## Formatting start.sh
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python3 -m ensurepip
+python3 -m pip install beautysh setuptools
+beautysh tor/start.sh
+```
+
 ## Usage Examples
 
 ### Deploying a Simple Web Application

@@ -40,7 +40,7 @@ while true; do
     if grep -q "Bootstrapped 100" "$TOR_LOG"; then
         break
     fi
-    
+
     sleep 1
 done
 
@@ -64,9 +64,9 @@ run_vanguards() {
     if [ -f "/tmp/vanguards_$1.pid" ]; then
         return
     fi
-    
+
     (
-        cd $VANGUARDS_STATE_DIR && 
+        cd $VANGUARDS_STATE_DIR &&
         $VANGUARDS_LOCATION \
             --state "$VANGUARDS_STATE_DIR/$1.state" \
             --config "/tmp/vanguards.conf" \
@@ -96,9 +96,9 @@ cd /
 cleanup() {
     echo "[+] Shutting down Tor and vanguards..."
     find /tmp -name "vanguards_*.pid" -type f -exec sh -c 'kill $(cat {}) 2>/dev/null; rm {}' \; || true
-    
+
     [ -n "$TOR_PID" ] && kill -0 $TOR_PID 2>/dev/null && { kill $TOR_PID; wait $TOR_PID || true; }
-    
+
     exit 0
 }
 

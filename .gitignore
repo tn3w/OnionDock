@@ -1,2 +1,5 @@
 # Hidden service files
 **/tor/hidden_service
+
+# Python virtual environment for formatting start.sh
+venv/
