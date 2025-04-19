@@ -30,4 +30,4 @@ services:
 
 networks:
   onion_network:
-    driver: bridge 
+    driver: bridge

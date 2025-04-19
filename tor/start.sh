@@ -7,6 +7,19 @@ VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
 
 echo "[+] Starting OnionDock: $SECURITY_LEVEL security"
 
+if [ -d "/var/lib/tor/hidden_service" ]; then
+    echo "[+] Fixing hidden service directory permissions"
+    chown -R tor:tor /var/lib/tor/hidden_service
+    chmod -R 700 /var/lib/tor/hidden_service
+fi
+
+if [ ! -d "/var/lib/tor/hidden_service" ]; then
+    echo "[+] Creating hidden service directory"
+    mkdir -p /var/lib/tor/hidden_service
+    chown -R tor:tor /var/lib/tor/hidden_service
+    chmod -R 700 /var/lib/tor/hidden_service
+fi
+
 cp /etc/tor/torrc /tmp/torrc
 
 if [ -f "/etc/tor/vanguards.conf" ]; then
