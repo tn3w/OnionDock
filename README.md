@@ -73,7 +73,7 @@ sudo systemctl enable --now docker
 
 2. Stop any existing containers:
    ```bash
-   sudo docker-compose down
+   sudo docker compose down
    ```
 
 3. Build the oniondock image:
@@ -85,17 +85,17 @@ sudo systemctl enable --now docker
    ```bash
    cd example
    DOCKER_BUILDKIT=1 sudo docker build -t webapp .
-   sudo docker-compose up -d
+   sudo docker compose up -d
    ```
 
 5. Get your Tor hidden service address:
    ```bash
-   docker-compose logs tor | grep "Tor hidden service at"
+   docker compose logs tor | grep "Tor hidden service at"
    ```
 
 Quick command:
 ```bash
-git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker-compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp . && sudo docker-compose up -d && docker-compose logs tor | grep "Tor hidden service at"
+git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp . && sudo docker compose up -d && docker compose logs tor | grep "Tor hidden service at"
 ```
 
 ## Formatting start.sh
@@ -113,7 +113,7 @@ beautysh tor/start.sh
 ### Deploying a Simple Web Application
 
 ```yaml
-# Add to docker-compose.yml
+# Add to docker compose.yml
 services:
   webapp:
     image: nginx:latest
@@ -183,7 +183,7 @@ OnionDock can be customized through environment variables:
   - `medium`: Basic security components without circuit build time verification
   - `low`: Minimal security with only vanguards layer protection
 
-Example docker-compose.yml:
+Example docker compose.yml:
 ```yaml
 services:
   tor:
