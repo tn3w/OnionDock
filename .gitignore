@@ -1,5 +1,9 @@
 # Hidden service files
-**/tor/hidden_service
+example/data/tor/hidden_service/*
+!example/data/tor/hidden_service/.gitkeep
+
+tor/hidden_service/*
+!tor/hidden_service/.gitkeep
 
 # Python virtual environment for formatting start.sh
 venv/
