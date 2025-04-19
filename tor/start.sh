@@ -20,20 +20,32 @@ if [ -f "/etc/tor/vanguards.conf" ]; then
 fi
 
 echo "[+] Starting Tor hidden service..."
-tor -f /tmp/torrc &
-TOR_PID=$!
+TOR_LOG="/tmp/tor.log"
 
-echo "[+] Waiting for Tor to bootstrap..."
+mkfifo /tmp/tor_fifo
+tor -f /tmp/torrc > /tmp/tor_fifo 2>&1 &
+TOR_PID=$!
+cat /tmp/tor_fifo | tee -a "$TOR_LOG" &
+CAT_PID=$!
 
 mkdir -p /var/lib/tor
 chmod 700 /var/lib/tor
 
 while true; do
-    if grep -q "Bootstrapped 100" /var/lib/tor/notices.log 2>/dev/null || ! kill -0 $TOR_PID 2>/dev/null; then
+    if ! kill -0 $TOR_PID 2>/dev/null; then
+        echo "[!] Tor process died during bootstrap"
+        exit 1
+    fi
+
+    if grep -q "Bootstrapped 100" "$TOR_LOG"; then
         break
     fi
+    
     sleep 1
 done
+
+kill $CAT_PID 2>/dev/null || true
+rm -f /tmp/tor_fifo
 
 if [ -f /var/lib/tor/hidden_service/hostname ]; then
     ONION_ADDRESS=$(cat /var/lib/tor/hidden_service/hostname)
@@ -48,13 +60,6 @@ chmod 700 $VANGUARDS_STATE_DIR
 
 mkdir -p /tmp/vanguards_logs
 
-LOG_FILE="/var/lib/tor/notices.log"
-touch $LOG_FILE
-chmod 644 $LOG_FILE
-
-(tail -n 0 -F $LOG_FILE | grep -v "CIRCUIT_IS_CONFLUX\|circ->purpose == CIRCUIT_PURPOSE_CONFLUX_UNLINKED" &)
-LOG_MONITOR_PID=$!
-
 run_vanguards() {
     if [ -f "/tmp/vanguards_$1.pid" ]; then
         return
@@ -64,7 +69,6 @@ run_vanguards() {
         cd $VANGUARDS_STATE_DIR && 
         $VANGUARDS_LOCATION \
             --state "$VANGUARDS_STATE_DIR/$1.state" \
-            --logfile "$LOG_FILE" \
             --config "/tmp/vanguards.conf" \
             --control_port 9051 \
             "${@:2}" &
@@ -91,27 +95,13 @@ cd /
 
 cleanup() {
     echo "[+] Shutting down Tor and vanguards..."
-    for pidfile in /tmp/vanguards_*.pid; do
-        if [ -f "$pidfile" ]; then
-            pid=$(cat "$pidfile")
-            kill $pid 2>/dev/null || true
-            rm -f "$pidfile"
-        fi
-    done
+    find /tmp -name "vanguards_*.pid" -type f -exec sh -c 'kill $(cat {}) 2>/dev/null; rm {}' \; || true
     
-    if [ -n "$LOG_MONITOR_PID" ] && kill -0 $LOG_MONITOR_PID 2>/dev/null; then
-        kill $LOG_MONITOR_PID 2>/dev/null || true
-    fi
-    
-    if [ -n "$TOR_PID" ] && kill -0 $TOR_PID 2>/dev/null; then
-        kill $TOR_PID
-        wait $TOR_PID || true
-    fi
+    [ -n "$TOR_PID" ] && kill -0 $TOR_PID 2>/dev/null && { kill $TOR_PID; wait $TOR_PID || true; }
     
     exit 0
 }
 
 trap cleanup INT TERM
-
 wait $TOR_PID
 cleanup

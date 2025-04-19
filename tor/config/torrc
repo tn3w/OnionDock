@@ -29,7 +29,6 @@ DisableDebuggerAttachment 1
 
 # Log settings
 Log notice stdout
-Log notice file /var/lib/tor/notices.log
 SafeLogging 1
 
 # Hardening settings

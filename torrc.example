@@ -18,6 +18,8 @@ ReducedCircuitPadding 0
 # This should be changed to your own configuration
 HiddenServiceDir /var/lib/tor/hidden_service
 HiddenServiceVersion 3
+# instead of webapp, use the name of the service you want to expose
+# add more services by adding more HiddenServicePort lines
 HiddenServicePort {{HIDDEN_SERVICE_PORT}} webapp:80
 
 # Data directory location
@@ -31,7 +33,6 @@ DisableDebuggerAttachment 1
 
 # Log settings
 Log notice stdout
-Log notice file /var/lib/tor/notices.log
 SafeLogging 1
 
 # Hardening settings
