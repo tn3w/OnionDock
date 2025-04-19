@@ -41,9 +41,9 @@ RUN chmod +x /usr/local/bin/start.sh
 
 RUN mkdir -p /tmp/vanguards_logs
 
-RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d && \
-    chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh /usr/local/lib/vanguards /tmp/vanguards_logs && \
-    chmod -R 700 /var/lib/tor && \
+RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d /var/lib/hidden_service && \
+    chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh /usr/local/lib/vanguards /tmp/vanguards_logs /var/lib/hidden_service && \
+    chmod -R 700 /var/lib/tor /var/lib/hidden_service && \
     chmod 755 /usr/local/bin/start.sh
 
 USER tor
