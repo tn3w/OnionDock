@@ -15,9 +15,6 @@ RUN pip install --no-cache-dir stem
 RUN pypy3 -m venv /pypy_venv
 ENV PYPY_PATH="/pypy_venv/bin"
 
-RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d \
-    /usr/local/lib/vanguards /var/lib/tor/onion_auth
-
 RUN git clone https://github.com/mikeperry-tor/vanguards.git /tmp/vanguards && \
     cd /tmp/vanguards && \
     # Fix Python 3.12 compatibility issues
@@ -29,6 +26,7 @@ RUN git clone https://github.com/mikeperry-tor/vanguards.git /tmp/vanguards && \
     sed -i 's/config.readfp(open(config_file, "r"))/config.read_file(open(config_file, "r"))/' \
         /tmp/vanguards/src/vanguards/config.py && \
     $PYPY_PATH/pip install . && \
+    mkdir -p /usr/local/lib/vanguards && \
     cp -r /tmp/vanguards/* /usr/local/lib/vanguards/ && \
     rm -rf /tmp/vanguards
 
@@ -36,13 +34,18 @@ ENV PATH="/pypy_venv/bin:$PATH"
 
 COPY config/torrc /etc/tor/torrc
 COPY config/vanguards.conf /etc/tor/vanguards.conf
-
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 
 RUN mkdir -p /tmp/vanguards_logs && \
+    mkdir -p /var/lib/tor/hidden_service /var/lib/tor/onion_auth /etc/tor/torrc.d && \
     chown -R tor:tor /tmp/vanguards_logs && \
-    chown -R tor:tor /var/lib/tor/hidden_service /var/lib/tor/onion_auth
+    chown -R tor:tor /var/lib/tor && \
+    chown -R tor:tor /etc/tor && \
+    chown -R tor:tor /usr/local/lib/vanguards && \
+    chmod 700 /var/lib/tor/hidden_service && \
+    chmod 700 /var/lib/tor/onion_auth && \
+    chmod 755 /etc/tor/torrc.d
 
 USER tor
 
