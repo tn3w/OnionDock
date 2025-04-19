@@ -95,8 +95,29 @@ sudo systemctl enable --now docker
 
 Quick command:
 ```bash
-git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service at"
+git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && \
+sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && \
+cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && \
+sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service at"
 ```
+
+### Building using tor from source
+
+In step 3, instead of using the normal Dockerfile, use the following:
+```bash
+DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile.tor-from-source tor/
+```
+
+Quick command:
+```bash
+git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && \
+sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile.tor-from-source tor/ && \
+cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && \
+sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service at"
+```
+
+This will build tor from source and use the latest stable version.
+This could take a while, so be patient.
 
 ### Cleaning up
 
