@@ -90,7 +90,7 @@ sudo systemctl enable --now docker
 
 5. Get your Tor hidden service address:
    ```bash
-   sudo docker compose logs tor | grep "Tor hidden service at"
+   sudo docker compose logs tor | grep "Tor hidden service"
    ```
 
 Quick command:
@@ -98,7 +98,7 @@ Quick command:
 git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && \
 sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && \
 cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && \
-sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service at"
+sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service"
 ```
 
 ### Building using tor from source
@@ -113,7 +113,7 @@ Quick command:
 git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && \
 sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile.tor-from-source tor/ && \
 cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && \
-sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service at"
+sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service"
 ```
 
 This will build tor from source and use the latest stable version.
