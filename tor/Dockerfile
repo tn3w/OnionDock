@@ -15,8 +15,7 @@ RUN pip install --no-cache-dir stem
 RUN pypy3 -m venv /pypy_venv
 ENV PYPY_PATH="/pypy_venv/bin"
 
-RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d \
-    /usr/local/lib/vanguards /var/lib/tor/onion_auth
+RUN mkdir -p /usr/local/lib/vanguards
 
 RUN git clone https://github.com/mikeperry-tor/vanguards.git /tmp/vanguards && \
     cd /tmp/vanguards && \
@@ -40,14 +39,7 @@ COPY config/vanguards.conf /etc/tor/vanguards.conf
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 
-RUN chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh && \
-    chmod -R 700 /var/lib/tor && \
-    chmod 755 /usr/local/bin/start.sh
-
-RUN mkdir -p /tmp/vanguards_logs && \
-    chown -R tor:tor /tmp/vanguards_logs
-
-USER tor
+RUN mkdir -p /tmp/vanguards_logs
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=20s \
     CMD torify curl -f http://localhost:80 || exit 1
