@@ -84,7 +84,7 @@ sudo systemctl enable --now docker
 4. Change to the example directory and start the services:
    ```bash
    cd example
-   DOCKER_BUILDKIT=1 sudo docker build -t webapp .
+   DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/
    sudo docker compose up -d
    ```
 
@@ -95,7 +95,7 @@ sudo systemctl enable --now docker
 
 Quick command:
 ```bash
-git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp . && sudo docker compose up -d && docker compose logs tor | grep "Tor hidden service at"
+git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && sudo docker compose up -d && sleep 10 && docker compose logs tor | grep "Tor hidden service at"
 ```
 
 ## Formatting start.sh
