@@ -98,6 +98,13 @@ Quick command:
 git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp -f app/Dockerfile app/ && sudo docker compose up -d && sleep 10 && sudo docker compose logs tor | grep "Tor hidden service at"
 ```
 
+### Cleaning up
+
+```bash
+sudo docker compose down
+sudo docker rmi oniondock webapp
+```
+
 ## Formatting start.sh
 
 ```bash
