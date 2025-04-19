@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir stem
 RUN pypy3 -m venv /pypy_venv
 ENV PYPY_PATH="/pypy_venv/bin"
 
+RUN mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d \
+    /usr/local/lib/vanguards /var/lib/tor/onion_auth
+
 RUN git clone https://github.com/mikeperry-tor/vanguards.git /tmp/vanguards && \
     cd /tmp/vanguards && \
     # Fix Python 3.12 compatibility issues
