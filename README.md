@@ -31,45 +31,37 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
 
 ### Quick Start
 
-1. Clone this repository:
-   ```
+1. Clone this repository and enter the directory:
+   ```bash
    git clone https://github.com/tn3w/OnionDock.git
    cd OnionDock
    ```
 
-2. Add your web application to the appropriate directory or modify the docker-compose.yml to include your application container.
-
-3. Start the services:
-   ```
-   docker-compose up -d
+2. Stop any existing containers:
+   ```bash
+   sudo docker-compose down
    ```
 
-4. Your Tor hidden service address will be available in the logs:
-   ```
-   docker-compose logs tor
-   ```
-
-### Building Individual Components
-
-1. Build just the Tor component with a custom tag:
-   ```
-   docker build -t oniondock -f tor/Dockerfile tor/
+3. Build the oniondock image:
+   ```bash
+   DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/
    ```
 
-2. Build and run the example web application:
-   ```
+4. Change to the example directory and start the services:
+   ```bash
    cd example
-   docker-compose up -d
+   DOCKER_BUILDKIT=1 sudo docker build -t webapp .
+   sudo docker-compose up -d
    ```
 
-3. Check the status of your hidden service:
-   ```
-   docker-compose logs -f
+5. Get your Tor hidden service address:
+   ```bash
+   docker-compose logs tor | grep "Tor hidden service at"
    ```
 
-Quick test command:
+Quick command:
 ```bash
-sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && sudo docker-compose down && sudo docker-compose up -d && docker-compose logs -f
+git clone https://github.com/tn3w/OnionDock.git && cd OnionDock && sudo docker-compose down && DOCKER_BUILDKIT=1 sudo docker build -t oniondock -f tor/Dockerfile tor/ && cd example && DOCKER_BUILDKIT=1 sudo docker build -t webapp . && sudo docker-compose up -d && docker-compose logs tor | grep "Tor hidden service at"
 ```
 
 ## Formatting start.sh

@@ -1,8 +1,7 @@
 # OnionDock Example Tor Configuration
-# Should be copied to ../tor/config/torrc
+# Use `cp torrc.example tor/config/torrc` to use this configuration
 
 # Performance settings
-NumCPUs {{TOR_THREADS}}
 HardwareAccel 1
 AvoidDiskWrites 1
 
@@ -18,9 +17,8 @@ ReducedCircuitPadding 0
 # This should be changed to your own configuration
 HiddenServiceDir /var/lib/tor/hidden_service
 HiddenServiceVersion 3
-# instead of webapp, use the name of the service you want to expose
-# add more services by adding more HiddenServicePort lines
-HiddenServicePort {{HIDDEN_SERVICE_PORT}} webapp:80
+# HiddenServicePort <port> <docker_container_name>:80
+# example: HiddenServicePort 80 webapp:80
 
 # Data directory location
 DataDirectory /var/lib/tor

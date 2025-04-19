@@ -1,10 +1,6 @@
-# OnionDock Example Tor Configuration
-# Performance settings
-NumCPUs {{TOR_THREADS}}
 HardwareAccel 1
 AvoidDiskWrites 1
 
-# Security settings
 StrictNodes 1
 SafeSocks 1
 ConnectionPadding 1
@@ -12,26 +8,20 @@ ReducedConnectionPadding 0
 CircuitPadding 1
 ReducedCircuitPadding 0
 
-# Set up the hidden service
-# This should be changed to your own configuration
 HiddenServiceDir /var/lib/tor/hidden_service
 HiddenServiceVersion 3
-HiddenServicePort {{HIDDEN_SERVICE_PORT}} webapp:80
+HiddenServicePort 80 webapp:80
 
-# Data directory location
 DataDirectory /var/lib/tor
 
-# Control port for vanguards
 ControlPort 9051
 CookieAuthentication 1
 CookieAuthFile /var/lib/tor/control_auth_cookie
 DisableDebuggerAttachment 1
 
-# Log settings
 Log notice stdout
 SafeLogging 1
 
-# Hardening settings
 ClientRejectInternalAddresses 1
 NewCircuitPeriod 30
 MaxCircuitDirtiness 600

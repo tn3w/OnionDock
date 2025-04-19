@@ -2,17 +2,12 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-TOR_THREADS=${TOR_THREADS:-$(nproc)}
-HIDDEN_SERVICE_PORT=${HIDDEN_SERVICE_PORT:-80}
 SECURITY_LEVEL=${SECURITY_LEVEL:-high}
 VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
-OTHER_OPTIONS="--control_port 9051"
-VANGUARDS_CONFIG="/etc/tor/vanguards.conf"
 
-echo "[+] Starting OnionDock: $SECURITY_LEVEL security, $TOR_THREADS threads"
+echo "[+] Starting OnionDock: $SECURITY_LEVEL security"
 
 cp /etc/tor/torrc /tmp/torrc
-sed -i "s/{{TOR_THREADS}}/$TOR_THREADS/g; s/{{HIDDEN_SERVICE_PORT}}/$HIDDEN_SERVICE_PORT/g" /tmp/torrc
 
 if [ -f "/etc/tor/vanguards.conf" ]; then
     cp /etc/tor/vanguards.conf /tmp/vanguards.conf
@@ -49,7 +44,7 @@ rm -f /tmp/tor_fifo
 
 if [ -f /var/lib/tor/hidden_service/hostname ]; then
     ONION_ADDRESS=$(cat /var/lib/tor/hidden_service/hostname)
-    echo "[+] Tor hidden service: $ONION_ADDRESS (port $HIDDEN_SERVICE_PORT)"
+    echo "[+] Tor hidden service: $ONION_ADDRESS"
 else
     echo "[!] Hidden service hostname file not found after bootstrap"
 fi
@@ -90,8 +85,6 @@ case "$SECURITY_LEVEL" in
         run_vanguards "guards" --disable_bandguards --disable_rendguard --disable_cbtverify &
         ;;
 esac
-
-cd /
 
 cleanup() {
     echo "[+] Shutting down Tor and vanguards..."
