@@ -40,7 +40,7 @@ COPY config/vanguards.conf /etc/tor/vanguards.conf
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 
-RUN adduser -D -h /var/lib/tor tor || true && \
+RUN adduser -D -h /var/lib/tor tor && \
     chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh && \
     chmod -R 700 /var/lib/tor && \
     chmod 755 /usr/local/bin/start.sh
