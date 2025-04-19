@@ -11,13 +11,6 @@ VANGUARDS_CONFIG="/etc/tor/vanguards.conf"
 
 echo "[+] Starting OnionDock: $SECURITY_LEVEL security, $TOR_THREADS threads"
 
-if [ "$(id -u)" = "0" ]; then
-    echo "[+] Running as root, fixing permissions..."
-    chown -R tor:tor /var/lib/tor
-    chmod -R 700 /var/lib/tor
-    exec su -s /bin/bash tor -c "$0"
-fi
-
 cp /etc/tor/torrc /tmp/torrc
 sed -i "s/{{TOR_THREADS}}/$TOR_THREADS/g; s/{{HIDDEN_SERVICE_PORT}}/$HIDDEN_SERVICE_PORT/g" /tmp/torrc
 

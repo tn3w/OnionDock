@@ -53,8 +53,12 @@ COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 
 RUN adduser -D -h /var/lib/tor tor && \
-    chown -R tor:tor /var/lib/tor /etc/tor && \
-    chmod -R 700 /var/lib/tor
+    chown -R tor:tor /var/lib/tor /etc/tor /usr/local/bin/start.sh && \
+    chmod -R 700 /var/lib/tor && \
+    chmod 755 /usr/local/bin/start.sh
+
+RUN mkdir -p /tmp/vanguards_logs && \
+    chown -R tor:tor /tmp/vanguards_logs
 
 USER tor
 

@@ -11,9 +11,6 @@ services:
     restart: unless-stopped
     networks:
       - onion_network
-    depends_on:
-      - webapp
-    user: root
 
   # Example Redis service (uncomment if needed)
   # redis:

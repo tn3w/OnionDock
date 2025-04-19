@@ -14,7 +14,6 @@ services:
       - onion_network
     depends_on:
       - webapp
-    user: root
 
   webapp:
     build:
