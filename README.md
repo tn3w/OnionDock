@@ -1,4 +1,4 @@
-<pre align="center">
+```
              @@@@@                                                                
        @@@@@@@@@@@@@@@@@                                                          
     @@@@@@@@@@@@@@@   @@@@@                                                       
@@ -11,11 +11,10 @@
   @@@@@@@@@@@@@@@@@@@@@  @@@                                                      
     @@@@@@@@@@@@@@@   @@@@@                                                       
        @@@@@@@@@@@@@@@@@                                                          
-</pre>
+```
 
-<p align="center">
-<b>OnionDock</b> is a turnkey solution for deploying web applications as Tor hidden services with enhanced security, reliability, and performance.
-</p>
+**OnionDock** is a turnkey solution for deploying web applications as Tor hidden services with enhanced security, reliability, and performance.
+
 
 ## Table of Contents
 
