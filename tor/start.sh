@@ -2,6 +2,21 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# Print OnionDock logo
+echo "             @@@@@                                                                "
+echo "       @@@@@@@@@@@@@@@@@                                                          "
+echo "    @@@@@@@@@@@@@@@   @@@@@                                                       "
+echo "  @@@@@@@@@@@@@@ @@@@@@  @@@@                                                     "
+echo " @@@@@@@@@@@@@@@@@@  @@@@  @@@   .d88b.       w             888b.            8    "
+echo " @@@@@@@@@@@@@@@ @@@@  @@@ @@@   8P  Y8 8d8b. w .d8b. 8d8b. 8   8 .d8b. .d8b 8.dP "
+echo "@@@@@@@@@@@@@@@@   @@  @@@  @@@  8b  d8 8P Y8 8 8' .8 8P Y8 8   8 8' .8 8    88b  "
+echo " @@@@@@@@@@@@@@@ @@@@  @@@ @@@   \`Y88P' 8   8 8 \`Y8P' 8   8 888P' \`Y8P' \`Y8P 8 Yb "
+echo " @@@@@@@@@@@@@@@@@@  @@@@ @@@@   ~- By TN3W: https://github.com/tn3w/OnionDock -~ "
+echo "  @@@@@@@@@@@@@@@@@@@@@  @@@                                                      "
+echo "    @@@@@@@@@@@@@@@   @@@@@                                                       "
+echo "       @@@@@@@@@@@@@@@@@                                                          "
+echo ""
+
 SECURITY_LEVEL=${SECURITY_LEVEL:-high}
 VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
 
