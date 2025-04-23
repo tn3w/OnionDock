@@ -1,4 +1,3 @@
-```
              @@@@@                                                                
        @@@@@@@@@@@@@@@@@                                                          
     @@@@@@@@@@@@@@@   @@@@@                                                       
@@ -6,7 +5,7 @@
  @@@@@@@@@@@@@@@@@@  @@@@  @@@   .d88b.       w             888b.            8    
  @@@@@@@@@@@@@@@ @@@@  @@@ @@@   8P  Y8 8d8b. w .d8b. 8d8b. 8   8 .d8b. .d8b 8.dP 
 @@@@@@@@@@@@@@@@   @@  @@@  @@@  8b  d8 8P Y8 8 8' .8 8P Y8 8   8 8' .8 8    88b  
- @@@@@@@@@@@@@@@ @@@@  @@@ @@@   `Y88P' 8   8 8 `Y8P' 8   8 888P' `Y8P' `Y8P 8 Yb 
+ @@@@@@@@@@@@@@@ @@@@  @@@ @@@   \`Y88P' 8   8 8 \`Y8P' 8   8 888P' \`Y8P' \`Y8P 8 Yb 
  @@@@@@@@@@@@@@@@@@  @@@@ @@@@   ~- By TN3W: https://github.com/tn3w/OnionDock -~ 
   @@@@@@@@@@@@@@@@@@@@@  @@@                                                      
     @@@@@@@@@@@@@@@   @@@@@                                                       
@@ -24,7 +23,7 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Quick Start](#quick-start)
-  - [Building Tor from Source](#building-tor-from-source)
+  - [Docker Hub Images](#docker-hub-images)
 - [Usage](#usage)
   - [Deploy Your Own Application](#deploy-your-own-application)
   - [Configure Hidden Service Ports](#configure-hidden-service-ports)
@@ -33,6 +32,10 @@
 - [Configuration](#configuration)
   - [Security Levels](#security-levels)
   - [Advanced Tor Configuration](#advanced-tor-configuration)
+- [Building from Source](#building-from-source)
+  - [Installing Prerequisites](#installing-prerequisites)
+  - [Building Standard Image](#building-standard-image)
+  - [Building Tor from Source](#building-tor-from-source)
 - [Development](#development)
   - [Code Formatting](#code-formatting)
   - [Project Structure](#project-structure)
@@ -118,59 +121,57 @@ OnionDock consists of the following components:
 - Docker and Docker Compose installed on your system
 - Basic understanding of Docker containers and networks
 
-#### Installing Prerequisites on Ubuntu/Debian
+### Docker Hub Images
 
+OnionDock is available as pre-built Docker images on Docker Hub. This is the recommended way to use OnionDock.
+
+**Standard Image** (with packaged Tor):
 ```bash
-# Update package lists
-sudo apt update && sudo apt upgrade -y
+docker pull tn3w/oniondock:latest
+```
 
-# Install Git
-sudo apt install -y git
-
-# Install Docker prerequisites
-sudo apt install -y ca-certificates curl gnupg
-
-# Add Docker GPG key
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-# Add Docker repository
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Update and install Docker
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Add current user to docker group (no need for sudo with docker commands after logout/login)
-sudo usermod -aG docker $USER
-sudo systemctl enable --now docker
-
-# Log out and log back in for group changes to take effect, or run:
-# newgrp docker
+**From-Source Image** (with Tor built from source for enhanced security):
+```bash
+docker pull tn3w/oniondock:from-source
 ```
 
 ### Quick Start
 
-Follow these steps to deploy the example application:
+Follow these steps to deploy the example application using the Docker Hub image:
 
 1. **Clone this repository**:
    ```bash
    git clone https://github.com/tn3w/OnionDock.git
-   cd OnionDock
+   cd OnionDock/example
    ```
 
-2. **Build the OnionDock image**:
-   ```bash
-   DOCKER_BUILDKIT=1 docker build -t oniondock -f tor/Dockerfile tor/
+2. **Create a docker-compose.yml file**:
+   ```yaml
+   services:
+     tor:
+       image: tn3w/oniondock:latest
+       volumes:
+         - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
+       restart: unless-stopped
+       networks:
+         - onion_network
+       depends_on:
+         - webapp
+   
+     webapp:
+       build:
+         context: ./app
+       networks:
+         - onion_network
+       restart: unless-stopped
+   
+   networks:
+     onion_network:
+       driver: bridge
    ```
 
-3. **Deploy the example application**:
+3. **Build and start the services**:
    ```bash
-   cd example
-   DOCKER_BUILDKIT=1 docker build -t webapp -f app/Dockerfile app/
    docker compose up -d
    ```
 
@@ -191,44 +192,18 @@ Follow these steps to deploy the example application:
 **All-in-one command**:
 ```bash
 git clone https://github.com/tn3w/OnionDock.git && \
-cd OnionDock && \
-DOCKER_BUILDKIT=1 docker build -t oniondock -f tor/Dockerfile tor/ && \
-cd example && \
-DOCKER_BUILDKIT=1 docker build -t webapp -f app/Dockerfile app/ && \
+cd OnionDock/example && \
 docker compose up -d && \
 sleep 10 && \
 docker compose logs tor | grep "Tor hidden service"
 ```
-
-### Building Tor from Source
-
-For enhanced security or to use the latest Tor version, you can build Tor from source:
-
-```bash
-DOCKER_BUILDKIT=1 docker build -t oniondock -f tor/Dockerfile.tor-from-source tor/
-```
-
-**All-in-one command with Tor from source**:
-```bash
-git clone https://github.com/tn3w/OnionDock.git && \
-cd OnionDock && \
-DOCKER_BUILDKIT=1 docker build -t oniondock -f tor/Dockerfile.tor-from-source tor/ && \
-cd example && \
-DOCKER_BUILDKIT=1 docker build -t webapp -f app/Dockerfile app/ && \
-docker compose up -d && \
-sleep 10 && \
-docker compose logs tor | grep "Tor hidden service"
-```
-
-> **Note**: Building Tor from source takes significantly longer than using the packaged version. Be patient during the build process.
 
 ### Cleaning Up
 
-To stop and remove all containers and images:
+To stop and remove all containers:
 
 ```bash
 docker compose down
-docker rmi oniondock webapp
 ```
 
 ## Usage
@@ -253,7 +228,7 @@ To deploy your own application with OnionDock, follow these steps:
    ```yaml
    services:
      tor:
-       image: oniondock:latest  # Or use build: if you want to build from source
+       image: tn3w/oniondock:latest  # Use the Docker Hub image
        volumes:
          - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
        restart: unless-stopped
@@ -297,122 +272,6 @@ To deploy your own application with OnionDock, follow these steps:
    ```bash
    docker compose logs tor | grep "Tor hidden service"
    ```
-
-### Configure Hidden Service Ports
-
-To map different ports between your Tor hidden service and your application, modify the torrc file:
-
-```
-# Map multiple ports
-HiddenServicePort 80 your-app-service:3000   # Web traffic
-HiddenServicePort 443 your-app-service:3001  # SSL traffic
-HiddenServicePort 22 ssh-service:22         # SSH service
-
-# Map a different onion port to your application
-HiddenServicePort 8080 your-app-service:3000  # Access via youraddress.onion:8080
-```
-
-### Add a Load Balancer
-
-For high-availability setups, add an Nginx load balancer:
-
-```yaml
-services:
-  tor:
-    # ...same as before
-    depends_on:
-      - load_balancer
-
-  load_balancer:
-    image: nginx:alpine
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - onion_network
-    depends_on:
-      - app1
-      - app2
-    restart: unless-stopped
-
-  app1:
-    build:
-      context: ./app
-    # ...configuration
-    networks:
-      - onion_network
-
-  app2:
-    build:
-      context: ./app
-    # ...configuration
-    networks:
-      - onion_network
-
-networks:
-  onion_network:
-    driver: bridge
-```
-
-Example nginx.conf for load balancing:
-```nginx
-user nginx;
-worker_processes auto;
-error_log /var/log/nginx/error.log warn;
-pid /var/run/nginx.pid;
-
-events {
-  worker_connections 1024;
-}
-
-http {
-  upstream app_servers {
-    server app1:3000;
-    server app2:3000;
-  }
-
-  server {
-    listen 80;
-    
-    location / {
-      proxy_pass http://app_servers;
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-    }
-  }
-}
-```
-
-### Add a Database Service
-
-Add a database service to your application stack:
-
-```yaml
-services:
-  tor:
-    # ...configuration
-
-  your-app-service:
-    # ...configuration
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/dbname
-
-  db:
-    image: postgres:14-alpine
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dbname
-    networks:
-      - onion_network
-    restart: unless-stopped
-
-volumes:
-  db_data:
-```
 
 ## Configuration
 
@@ -467,6 +326,68 @@ StrictNodes 1
 EnforceDistinctSubnets 1
 WarnUnsafeSocks 1
 ```
+
+## Building from Source
+
+If you prefer to build the OnionDock images locally rather than using the pre-built Docker Hub images, follow these instructions.
+
+### Installing Prerequisites
+
+#### Installing Prerequisites on Ubuntu/Debian
+
+```bash
+# Update package lists
+sudo apt update && sudo apt upgrade -y
+
+# Install Git
+sudo apt install -y git
+
+# Install Docker prerequisites
+sudo apt install -y ca-certificates curl gnupg
+
+# Add Docker GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add Docker repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update and install Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Add current user to docker group (no need for sudo with docker commands after logout/login)
+sudo usermod -aG docker $USER
+sudo systemctl enable --now docker
+
+# Log out and log back in for group changes to take effect, or run:
+# newgrp docker
+```
+
+### Building Standard Image
+
+Build the standard OnionDock image with packaged Tor:
+
+```bash
+git clone https://github.com/tn3w/OnionDock.git
+cd OnionDock
+DOCKER_BUILDKIT=1 docker build -t oniondock -f tor/Dockerfile tor/
+```
+
+### Building Tor from Source
+
+For enhanced security or to use the latest Tor version, you can build Tor from source:
+
+```bash
+git clone https://github.com/tn3w/OnionDock.git
+cd OnionDock
+DOCKER_BUILDKIT=1 docker build -t oniondock-from-source -f tor/Dockerfile.tor-from-source tor/
+```
+
+> **Note**: Building Tor from source takes significantly longer than using the packaged version. Be patient during the build process.
 
 ## Development
 

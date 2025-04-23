@@ -1,11 +1,8 @@
 services:
   tor:
-    build:
-      context: ../tor
-      dockerfile: Dockerfile
+    image: tn3w/oniondock:latest
     volumes:
       - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
-      - ../tor/config:/etc/tor:ro
     restart: unless-stopped
     networks:
       - onion_network
