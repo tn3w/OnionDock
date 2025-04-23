@@ -146,37 +146,12 @@ Follow these steps to deploy the example application using the Docker Hub image:
    cd OnionDock/example
    ```
 
-2. **Create a docker-compose.yml file**:
-   ```yaml
-   services:
-     tor:
-       image: tn3w/oniondock:latest
-       volumes:
-         - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
-       restart: unless-stopped
-       networks:
-         - onion_network
-       depends_on:
-         - webapp
-   
-     webapp:
-       build:
-         context: ./app
-       networks:
-         - onion_network
-       restart: unless-stopped
-   
-   networks:
-     onion_network:
-       driver: bridge
-   ```
-
-3. **Build and start the services**:
+2. **Build and start the services**:
    ```bash
    docker compose up -d
    ```
 
-4. **Get your Tor hidden service address**:
+3. **Get your Tor hidden service address**:
    ```bash
    docker compose logs tor | grep "Tor hidden service"
    ```
@@ -186,7 +161,7 @@ Follow these steps to deploy the example application using the Docker Hub image:
    [+] Tor hidden service at: abcdefghijklmnopqrstuvwxyz234567.onion
    ```
 
-5. **Access your hidden service**:
+4. **Access your hidden service**:
    
    Open the Tor Browser and navigate to the onion address shown in the previous step.
 
