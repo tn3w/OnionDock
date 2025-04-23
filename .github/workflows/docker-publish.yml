@@ -1,0 +1,114 @@
+name: Build and Publish OnionDock
+
+on:
+  push:
+    branches: [ "master", "main" ]
+    # Publish semver tags as releases
+    tags: [ 'v*.*.*' ]
+    paths:
+      - 'tor/Dockerfile'
+      - 'tor/Dockerfile.tor-from-source'
+      - 'tor/config/**'
+      - 'tor/entrypoint.sh'
+      - 'tor/start.sh'
+  pull_request:
+    branches: [ "master", "main" ]
+    paths:
+      - 'tor/Dockerfile'
+      - 'tor/Dockerfile.tor-from-source'
+      - 'tor/config/**'
+      - 'tor/entrypoint.sh'
+      - 'tor/start.sh'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install the cosign tool except on PR
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
+        with:
+          cosign-release: 'v2.2.4'
+
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+
+      # Login to Docker Hub
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          username: tn3w
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # Extract metadata (tags, labels) for Docker
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        with:
+          images: tn3w/oniondock
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Build and push standard Dockerfile
+      - name: Build and push standard Docker image
+        id: build-and-push
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+        with:
+          context: tor/
+          file: tor/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push "from-source" version with different tag suffix
+      - name: Extract Docker metadata for from-source image
+        id: meta-from-source
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        with:
+          images: tn3w/oniondock
+          tags: |
+            type=semver,pattern={{version}}-from-source
+            type=semver,pattern={{major}}.{{minor}}-from-source
+            type=raw,value=from-source,enable={{is_default_branch}}
+
+      - name: Build and push from-source Docker image
+        id: build-and-push-from-source
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+        with:
+          context: tor/
+          file: tor/Dockerfile.tor-from-source
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-from-source.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Sign the resulting Docker image digests except on PRs
+      - name: Sign the published Docker image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+      
+      - name: Sign the published from-source Docker image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta-from-source.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push-from-source.outputs.digest }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST} 
