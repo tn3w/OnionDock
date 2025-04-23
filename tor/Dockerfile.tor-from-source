@@ -10,10 +10,12 @@ RUN apk add --no-cache \
 
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
+RUN pip install --upgrade pip>=23.3 setuptools>=70.0.0
 RUN pip install --no-cache-dir stem
 
 RUN pypy3 -m venv /pypy_venv
 ENV PYPY_PATH="/pypy_venv/bin"
+RUN $PYPY_PATH/pip install --upgrade pip>=23.3 setuptools>=70.0.0
 
 RUN mkdir -p /usr/src/tor && \
     cd /usr/src/tor && \
