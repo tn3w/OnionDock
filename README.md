@@ -309,7 +309,7 @@ If you prefer to build the OnionDock images locally rather than using the pre-bu
 
 ### Installing Prerequisites
 
-#### Installing Prerequisites on Ubuntu/Debian
+#### Installing Prerequisites on Ubuntu
 
 ```bash
 # Update package lists
@@ -321,15 +321,20 @@ sudo apt install -y git
 # Install Docker prerequisites
 sudo apt install -y ca-certificates curl gnupg
 
-# Add Docker GPG key
+# Install Docker GPG key
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-# Add Docker repository
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Create Docker repository configuration
+echo "deb [arch=$(dpkg --print-architecture) \
+     signed-by=/etc/apt/keyrings/docker.asc] \
+     https://download.docker.com/linux/ubuntu \
+     $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") \
+     stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update package lists with new repository
+sudo apt-get update
 
 # Update and install Docker
 sudo apt update
