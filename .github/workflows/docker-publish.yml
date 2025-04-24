@@ -112,12 +112,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
-      # Document security exception for non-root user requirement (from-source image)
-      - name: Document root requirement exception (from-source)
-        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          echo "::notice title=Security Attestation::From-source container initially runs as root to manage volume permissions in entrypoint.sh, but immediately drops privileges to run as the non-root 'tor' user. This is a well-documented pattern for containers that need to manage bind-mounted volumes."
 
       # Sign the resulting Docker image digests except on PRs
       - name: Sign the published Docker image
@@ -157,7 +151,7 @@ jobs:
         uses: anchore/sbom-action@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.15.8
         with:
           image: ${{ steps.meta.outputs.tags }}@${{ steps.build-and-push.outputs.digest }}
-          artifact-name: sbom-standard.spdx.json
+          artifact-name: sbom_standard_spdx
           output-file: sbom-standard.spdx.json
 
       - name: Attach SBOM attestation for standard image
@@ -174,7 +168,7 @@ jobs:
         uses: anchore/sbom-action@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.15.8
         with:
           image: ${{ steps.meta-from-source.outputs.tags }}@${{ steps.build-and-push-from-source.outputs.digest }}
-          artifact-name: sbom-from-source.spdx.json
+          artifact-name: sbom_fromsource_spdx
           output-file: sbom-from-source.spdx.json
 
       - name: Attach SBOM attestation for from-source image
