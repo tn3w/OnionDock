@@ -108,7 +108,7 @@ graph LR
             Tor[("Tor Daemon")]
             style Tor fill:#6d214f,stroke:#b33939,stroke-width:2px,color:#ffd1dc
             
-            VG["🛡️ Vanguards"]
+            VG["Vanguards"]
             style VG fill:#3c162f,stroke:#e84393,stroke-width:1px,color:#ffb8d9,shape:hexagon
         end
         
