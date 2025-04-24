@@ -30,7 +30,9 @@ RUN mkdir -p /usr/src/tor && \
     cd / && \
     rm -rf /usr/src/tor && \
     mkdir -p /var/lib/tor/hidden_service /etc/tor/torrc.d \
-    /usr/local/lib/vanguards /var/lib/tor/onion_auth
+    /usr/local/lib/vanguards /var/lib/tor/onion_auth && \
+    # Remove build dependencies that are no longer needed
+    apk del build-base automake autoconf libtool pkgconfig libevent-dev openssl-dev zlib-dev xz-dev
 
 RUN git clone https://github.com/mikeperry-tor/vanguards.git /tmp/vanguards && \
     cd /tmp/vanguards && \

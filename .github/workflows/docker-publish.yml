@@ -74,6 +74,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          
+      # Document security exception for non-root user requirement
+      - name: Document root requirement exception
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          echo "::notice title=Security Attestation::Container initially runs as root to manage volume permissions in entrypoint.sh, but immediately drops privileges to run as the non-root 'tor' user. This is a well-documented pattern for containers that need to manage bind-mounted volumes."
 
       # Build and push "from-source" version with different tag suffix
       - name: Extract Docker metadata for from-source image
@@ -97,6 +103,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          
+      # Document security exception for non-root user requirement (from-source image)
+      - name: Document root requirement exception (from-source)
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          echo "::notice title=Security Attestation::From-source container initially runs as root to manage volume permissions in entrypoint.sh, but immediately drops privileges to run as the non-root 'tor' user. This is a well-documented pattern for containers that need to manage bind-mounted volumes."
 
       # Sign the resulting Docker image digests except on PRs
       - name: Sign the published Docker image
@@ -111,4 +123,70 @@ jobs:
         env:
           TAGS: ${{ steps.meta-from-source.outputs.tags }}
           DIGEST: ${{ steps.build-and-push-from-source.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST} 
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+      # Generate and attach SBOM attestation for standard image
+      - name: Generate SBOM for standard image
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: anchore/sbom-action@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.15.8
+        with:
+          image: ${{ steps.meta.outputs.tags }}@${{ steps.build-and-push.outputs.digest }}
+          artifact-name: sbom-standard.spdx.json
+          output-file: sbom-standard.spdx.json
+
+      - name: Attach SBOM attestation for standard image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          cosign attest --yes --type spdx --predicate sbom-standard.spdx.json ${TAGS}@${DIGEST}
+
+      # Generate and attach provenance attestation for standard image
+      - name: Generate and attach provenance for standard image
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/starter-workflows/slsa-generator/generic@9da94e1d8b8c73fdb0c38f0d4c9927ab3b12461a # v0.2.0
+        with:
+          image: ${{ steps.meta.outputs.tags }}@${{ steps.build-and-push.outputs.digest }}
+          provenance-file: provenance-standard.json
+          
+      - name: Attach provenance attestation for standard image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          cosign attest --yes --type slsaprovenance --predicate provenance-standard.json ${TAGS}@${DIGEST}
+
+      # Generate and attach SBOM attestation for from-source image
+      - name: Generate SBOM for from-source image
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: anchore/sbom-action@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.15.8
+        with:
+          image: ${{ steps.meta-from-source.outputs.tags }}@${{ steps.build-and-push-from-source.outputs.digest }}
+          artifact-name: sbom-from-source.spdx.json
+          output-file: sbom-from-source.spdx.json
+
+      - name: Attach SBOM attestation for from-source image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta-from-source.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push-from-source.outputs.digest }}
+        run: |
+          cosign attest --yes --type spdx --predicate sbom-from-source.spdx.json ${TAGS}@${DIGEST}
+
+      # Generate and attach provenance attestation for from-source image
+      - name: Generate and attach provenance for from-source image
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/starter-workflows/slsa-generator/generic@9da94e1d8b8c73fdb0c38f0d4c9927ab3b12461a # v0.2.0
+        with:
+          image: ${{ steps.meta-from-source.outputs.tags }}@${{ steps.build-and-push-from-source.outputs.digest }}
+          provenance-file: provenance-from-source.json
+          
+      - name: Attach provenance attestation for from-source image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta-from-source.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push-from-source.outputs.digest }}
+        run: |
+          cosign attest --yes --type slsaprovenance --predicate provenance-from-source.json ${TAGS}@${DIGEST} 
