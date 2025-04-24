@@ -1,0 +1,60 @@
+name: Update Docker Hub Description
+
+on:
+  push:
+    branches: [ "master", "main" ]
+    paths:
+      - 'README.md'
+
+jobs:
+  update-dockerhub-description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Process README for Docker Hub
+        id: process-readme
+        run: |
+          # Create processed README
+          cat README.md > processed-readme.md
+          
+          # Replace ASCII art with simpler version (replace first code block)
+          awk '
+            BEGIN {first=0; printed=0}
+            /^```$/ {
+              if (first == 0) {
+                first = 1;
+                print "```";
+                print ".d88b.       w             888b.            8    ";
+                print "8P  Y8 8d8b. w .d8b. 8d8b. 8   8 .d8b. .d8b 8.dP ";
+                print "8b  d8 8P Y8 8 8\047 .8 8P Y8 8   8 8\047 .8 8    88b  ";
+                print "`Y88P\047 8   8 8 `Y8P\047 8   8 888P\047 `Y8P\047 `Y8P 8 Yb";
+                print "```";
+                next;
+              }
+              if (first == 1 && printed == 0) {
+                printed = 1;
+                next;
+              }
+            }
+            (first == 0 || printed == 1) {print}
+          ' processed-readme.md > temp-readme.md && mv temp-readme.md processed-readme.md
+          
+          # Remove Table of Contents up to but not including Overview
+          sed -i '/^## Table of Contents/,/^## Overview/{/^## Overview/!d}' processed-readme.md
+          
+          # Store processed README content for the next step
+          README_CONTENT=$(cat processed-readme.md)
+          echo "README_CONTENT<<EOF" >> $GITHUB_ENV
+          echo "$README_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Update Docker Hub Description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: tn3w
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          repository: tn3w/oniondock
+          short-description: "Turnkey solution for deploying web applications as Tor hidden services."
+          readme-filepath: ./processed-readme.md 

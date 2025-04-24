@@ -67,6 +67,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
   - Automatic multi-threading for improved Tor performance
   - Parallel execution of Vanguards components for better CPU utilization
   - Dockerized environment for consistent resource allocation
+  - Runs Vanguards using PyPy for significantly enhanced performance
 
 - **Easy Integration**: 
   - Simple port sharing between your web application and the Tor hidden service
