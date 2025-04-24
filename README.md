@@ -97,24 +97,64 @@ OnionDock consists of the following components:
 
 **Simplified Architecture Diagram:**
 
+```mermaid
+graph LR
+    subgraph DockerNetwork["Docker Network"]
+        style DockerNetwork fill:#1a1a2e,stroke:#4d4dff,stroke-width:2px,color:#e6e6ff
+        
+        subgraph TorService["Tor Service"]
+            style TorService fill:#581845,stroke:#900C3F,stroke-width:2px,color:#ffd1dc
+            
+            Tor[("Tor Daemon")]
+            style Tor fill:#6d214f,stroke:#b33939,stroke-width:2px,color:#ffd1dc
+            
+            VG["🛡️ Vanguards"]
+            style VG fill:#3c162f,stroke:#e84393,stroke-width:1px,color:#ffb8d9,shape:hexagon
+        end
+        
+        App["Your App"]
+        style App fill:#16213e,stroke:#0099ff,stroke-width:2px,color:#8fd6ff
+    end
+    
+    subgraph ExternalOptions["External Services (Optional)"]
+        style ExternalOptions fill:#1e1e30,stroke:#666666,stroke-width:1px,stroke-dasharray: 5 5,color:#e6e6ff
+        
+        DB[(PostgreSQL)]
+        style DB fill:#1f3b2c,stroke:#5cb85c,stroke-width:2px,color:#9af5b1
+        
+        OtherDB[("Other Databases<br>(MySQL, MongoDB, etc)")]
+        style OtherDB fill:#2d2d3e,stroke:#8a8aff,stroke-width:2px,color:#c4c4ff
+        
+        ExternalAPI["External APIs"]
+        style ExternalAPI fill:#2b2133,stroke:#b366ff,stroke-width:2px,color:#e6ccff
+    end
+    
+    Internet(("Internet via<br>Tor Network"))
+    style Internet fill:#2d1d42,stroke:#9966ff,stroke-width:2px,color:#d8c2ff
+    
+    Tor -->|"forwards"| App
+    App -->|"responses"| Tor
+    App -.->|"optional<br>connections"| ExternalOptions
+    Tor -->|"routes through"| Internet
+    Tor --- VG
+    
+    classDef node rx:5,ry:5;
+    classDef label color:#cccccc,font-size:12px;
 ```
-+----------------------------------+
-|          Docker Network          |
-|                                  |
-|  +------------+    +----------+  |
-|  |            |    |          |  |
-|  |     Tor    |--->|  Your    |  |
-|  |  Service   |    |   App    |  |
-|  |            |<---|          |  |
-|  +------------+    +----------+  |
-|       ^                          |
-|       |                          |
-+-------|--------------------------|
-        |                          
-        v                          
-   Internet via                    
-   Tor Network                     
-```
+
+**Vanguards Integration**
+
+OnionDock includes the official [Vanguards](https://github.com/mikeperry-tor/vanguards) security enhancements for Tor, running on PyPy for improved performance. The Vanguards suite provides protection against various attacks on Tor hidden services:
+
+- **How it works in OnionDock:**
+  - Runs multiple security components in parallel for better resource utilization
+  - Configurable security levels (high/medium/low) via `SECURITY_LEVEL` environment variable
+  - In high security mode (default), all three modules run simultaneously:
+    - **Vanguards Module**: Protects against guard discovery attacks
+    - **BandGuards Module**: Mitigates bandwidth side-channel attacks
+    - **RendGuards Module**: Protects against rendezvous point enumeration
+
+The Tor service is hardened with these security enhancements while maintaining compatibility with any containerized web application, providing strong security with minimal configuration.
 
 ## Getting Started
 
