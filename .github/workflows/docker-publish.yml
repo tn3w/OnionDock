@@ -5,22 +5,8 @@ on:
     branches: [ "master", "main" ]
     # Publish semver tags as releases
     tags: [ 'v*.*.*' ]
-    paths:
-      - 'tor/Dockerfile'
-      - 'tor/Dockerfile.tor-from-source'
-      - 'tor/config/**'
-      - 'tor/entrypoint.sh'
-      - 'tor/start.sh'
-      - '.github/workflows/docker-publish.yml'
   pull_request:
     branches: [ "master", "main" ]
-    paths:
-      - 'tor/Dockerfile'
-      - 'tor/Dockerfile.tor-from-source'
-      - 'tor/config/**'
-      - 'tor/entrypoint.sh'
-      - 'tor/start.sh'
-      - '.github/workflows/docker-publish.yml'
 
 jobs:
   build:
