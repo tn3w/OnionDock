@@ -44,17 +44,24 @@ jobs:
           # Remove Table of Contents up to but not including Overview
           sed -i '/^## Table of Contents/,/^## Overview/{/^## Overview/!d}' processed-readme.md
           
-          # Store processed README content for the next step
-          README_CONTENT=$(cat processed-readme.md)
-          echo "README_CONTENT<<EOF" >> $GITHUB_ENV
-          echo "$README_CONTENT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Update Docker Hub Description
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: tn3w
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-          repository: tn3w/oniondock
-          short-description: "Turnkey solution for deploying web applications as Tor hidden services."
-          readme-filepath: ./processed-readme.md 
+      - name: Update Docker Hub Description directly
+        run: |
+          # Get a token
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST \
+            -d '{"username": "tn3w", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          
+          # Update the description
+          DESCRIPTION=$(cat processed-readme.md)
+          
+          # Create JSON payload
+          echo '{
+            "full_description": '"$(jq -Rs . <<< "$DESCRIPTION")"'
+          }' > payload.json
+          
+          # Send PATCH request
+          curl -s -X PATCH \
+            -H "Content-Type: application/json" \
+            -H "Authorization: JWT ${TOKEN}" \
+            -d @payload.json \
+            https://hub.docker.com/v2/repositories/tn3w/oniondock/ 
