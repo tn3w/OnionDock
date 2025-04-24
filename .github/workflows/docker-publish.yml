@@ -11,6 +11,7 @@ on:
       - 'tor/config/**'
       - 'tor/entrypoint.sh'
       - 'tor/start.sh'
+      - '.github/workflows/docker-publish.yml'
   pull_request:
     branches: [ "master", "main" ]
     paths:
@@ -19,6 +20,7 @@ on:
       - 'tor/config/**'
       - 'tor/entrypoint.sh'
       - 'tor/start.sh'
+      - '.github/workflows/docker-publish.yml'
 
 jobs:
   build:
@@ -125,6 +127,23 @@ jobs:
           DIGEST: ${{ steps.build-and-push-from-source.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
+      # Generate SHA256 hashes for SLSA provenance
+      - name: Generate hash for standard image
+        if: ${{ github.event_name != 'pull_request' }}
+        id: hash-standard
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          echo "digests=$(echo "${DIGEST}" | sha256sum | base64 -w0)" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate hash for from-source image
+        if: ${{ github.event_name != 'pull_request' }}
+        id: hash-from-source
+        env:
+          DIGEST: ${{ steps.build-and-push-from-source.outputs.digest }}
+        run: |
+          echo "digests=$(echo "${DIGEST}" | sha256sum | base64 -w0)" >> "${GITHUB_OUTPUT}"
+
       # Generate and attach SBOM attestation for standard image
       - name: Generate SBOM for standard image
         if: ${{ github.event_name != 'pull_request' }}
@@ -145,10 +164,11 @@ jobs:
       # Generate and attach provenance attestation for standard image
       - name: Generate and attach provenance for standard image
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/starter-workflows/slsa-generator/generic@9da94e1d8b8c73fdb0c38f0d4c9927ab3b12461a # v0.2.0
+        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.10.0
         with:
-          image: ${{ steps.meta.outputs.tags }}@${{ steps.build-and-push.outputs.digest }}
-          provenance-file: provenance-standard.json
+          base64-subjects: "${{ steps.hash-standard.outputs.digests }}"
+          provenance-name: provenance-standard.json
+          upload-assets: false
           
       - name: Attach provenance attestation for standard image
         if: ${{ github.event_name != 'pull_request' }}
@@ -178,10 +198,11 @@ jobs:
       # Generate and attach provenance attestation for from-source image
       - name: Generate and attach provenance for from-source image
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/starter-workflows/slsa-generator/generic@9da94e1d8b8c73fdb0c38f0d4c9927ab3b12461a # v0.2.0
+        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.10.0
         with:
-          image: ${{ steps.meta-from-source.outputs.tags }}@${{ steps.build-and-push-from-source.outputs.digest }}
-          provenance-file: provenance-from-source.json
+          base64-subjects: "${{ steps.hash-from-source.outputs.digests }}"
+          provenance-name: provenance-from-source.json
+          upload-assets: false
           
       - name: Attach provenance attestation for from-source image
         if: ${{ github.event_name != 'pull_request' }}
