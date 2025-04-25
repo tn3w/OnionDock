@@ -1,8 +1,6 @@
 services:
   tor:
-    build:
-      context: ../tor
-      dockerfile: Dockerfile
+    image: tn3w/oniondock:latest
     environment:
       - SECURITY_LEVEL=high
       - TOR_SERVICE_PORTS=80:webapp:80
