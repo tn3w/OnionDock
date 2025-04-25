@@ -246,6 +246,10 @@ To deploy your own application with OnionDock, follow these steps:
    services:
      tor:
        image: tn3w/oniondock:latest  # Use the Docker Hub image
+       environment:
+         # Format: TOR_PORT:SERVICE_NAME:SERVICE_PORT
+         # Multiple services can be comma-separated
+         - TOR_SERVICE_PORTS=80:your-app-service:3000
        volumes:
          - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
        restart: unless-stopped
@@ -269,26 +273,38 @@ To deploy your own application with OnionDock, follow these steps:
        driver: bridge
    ```
 
-3. **Configure the Tor service**:
-   
-   Create a custom torrc configuration to map your service's port:
-
-   ```
-   # Create this file at tor/config/torrc
-   HiddenServiceDir /var/lib/tor/hidden_service
-   HiddenServiceVersion 3
-   HiddenServicePort 80 your-app-service:3000  # Map port 80 on .onion to your app's port 3000
-   ```
-
-4. **Start your services**:
+3. **Start your services**:
    ```bash
    docker compose up -d
    ```
 
-5. **Get your Tor hidden service address**:
+4. **Get your Tor hidden service address**:
    ```bash
    docker compose logs tor | grep "Tor hidden service"
    ```
+
+### Configure Hidden Service Ports
+
+OnionDock makes it easy to configure port mappings between your Tor hidden service and your application services using the `TOR_SERVICE_PORTS` environment variable.
+
+The format is: `TOR_PORT:SERVICE_NAME:SERVICE_PORT`
+
+For multiple port mappings, separate them with commas:
+
+```yaml
+services:
+  tor:
+    image: tn3w/oniondock:latest
+    environment:
+      # Map multiple services and ports
+      - TOR_SERVICE_PORTS=80:web-app:8080,8888:admin-panel:3000,22:ssh-service:22
+    # ...other configuration
+```
+
+This configuration will:
+- Map port 80 on your .onion address to port 8080 on the web-app service
+- Map port 8888 on your .onion address to port 3000 on the admin-panel service
+- Map port 22 on your .onion address to port 22 on the ssh-service service
 
 ## Configuration
 
@@ -308,17 +324,20 @@ services:
     image: oniondock:latest
     environment:
       - SECURITY_LEVEL=high  # Options: high, medium, low
+      - TOR_SERVICE_PORTS=80:webapp:8080
     # ...other configuration
 ```
 
 ### Advanced Tor Configuration
 
-You can mount a custom torrc file to configure Tor settings:
+For advanced Tor configuration beyond port mapping, you can still mount a custom torrc file:
 
 ```yaml
 services:
   tor:
     image: oniondock:latest
+    environment:
+      - TOR_SERVICE_PORTS=80:webapp:8080,8888:admin:3000
     volumes:
       - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
       - ./tor/custom-torrc:/etc/tor/torrc:ro
@@ -333,16 +352,13 @@ DataDirectory /var/lib/tor
 ControlPort 9051
 CookieAuthentication 1
 
-# Hidden service configuration
-HiddenServiceDir /var/lib/tor/hidden_service
-HiddenServiceVersion 3
-HiddenServicePort 80 webapp:3000
-
 # Security enhancements
 StrictNodes 1
 EnforceDistinctSubnets 1
 WarnUnsafeSocks 1
 ```
+
+> **Note**: When using a custom torrc file, make sure it includes the line `# PORTS` where the port configurations should be inserted. Port mappings are dynamically generated from the `TOR_SERVICE_PORTS` environment variable.
 
 ## Building from Source
 

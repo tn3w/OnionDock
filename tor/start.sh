@@ -2,7 +2,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# Print OnionDock logo
 echo "             @@@@@                                                                "
 echo "       @@@@@@@@@@@@@@@@@                                                          "
 echo "    @@@@@@@@@@@@@@@   @@@@@                                                       "
@@ -17,12 +16,21 @@ echo "    @@@@@@@@@@@@@@@   @@@@@                                               
 echo "       @@@@@@@@@@@@@@@@@                                                          "
 echo ""
 
+TOR_SERVICE_PORTS=${TOR_SERVICE_PORTS:-"80:webapp:80"}
 SECURITY_LEVEL=${SECURITY_LEVEL:-high}
 VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
 
-echo "[+] Starting OnionDock: $SECURITY_LEVEL security"
+echo "[+] Starting OnionDock: $SECURITY_LEVEL security with ports: $TOR_SERVICE_PORTS"
 
 cp /etc/tor/torrc /tmp/torrc
+
+PORTS_CONFIG=""
+for port_mapping in ${TOR_SERVICE_PORTS//,/ }; do
+    IFS=':' read -r tor_port service_name service_port <<< "$port_mapping"
+    PORTS_CONFIG="${PORTS_CONFIG}HiddenServicePort $tor_port $service_name:$service_port\n"
+done
+
+sed -i "s/# PORTS/$PORTS_CONFIG/g" /tmp/torrc
 
 if [ -f "/etc/tor/vanguards.conf" ]; then
     cp /etc/tor/vanguards.conf /tmp/vanguards.conf

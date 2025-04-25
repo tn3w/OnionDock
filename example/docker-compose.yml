@@ -1,6 +1,9 @@
 services:
   tor:
     image: tn3w/oniondock:latest
+    environment:
+      - SECURITY_LEVEL=high
+      - TOR_SERVICE_PORTS=80:webapp:80
     volumes:
       - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
     restart: unless-stopped

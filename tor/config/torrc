@@ -10,7 +10,7 @@ ReducedCircuitPadding 0
 
 HiddenServiceDir /var/lib/tor/hidden_service
 HiddenServiceVersion 3
-HiddenServicePort 80 webapp:80
+# PORTS
 
 DataDirectory /var/lib/tor
 
