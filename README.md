@@ -1,4 +1,3 @@
-```
              @@@@@                                                                
        @@@@@@@@@@@@@@@@@                                                          
     @@@@@@@@@@@@@@@   @@@@@                                                       
@@ -33,6 +32,7 @@
 - [Configuration](#configuration)
   - [Security Levels](#security-levels)
   - [Advanced Tor Configuration](#advanced-tor-configuration)
+  - [Vanguards Configuration](#vanguards-configuration)
 - [Building from Source](#building-from-source)
   - [Installing Prerequisites](#installing-prerequisites)
   - [Building Standard Image](#building-standard-image)
@@ -359,6 +359,61 @@ WarnUnsafeSocks 1
 ```
 
 > **Note**: When using a custom torrc file, make sure it includes the line `# PORTS` where the port configurations should be inserted. Port mappings are dynamically generated from the `TOR_SERVICE_PORTS` environment variable.
+
+### Vanguards Configuration
+
+OnionDock includes a pre-configured `vanguards.conf` with balanced security settings. For high-risk services like whistleblower sites or sites facing state-level adversaries, we provide a maximum security configuration in `vanguards-max-security.conf`.
+
+**To use maximum security settings:**
+```bash
+# When using your own volume mounts
+cp tor/config/vanguards-max-security.conf tor/config/vanguards.conf
+```
+
+**Key Configuration Parameters:**
+
+- **[Global]**
+  - `control_ip`: Tor control connection IP (default: 127.0.0.1)
+  - `control_socket`: Path to Unix socket for Tor control (empty = use IP+port instead)
+  - `control_pass`: Password for Tor control authentication (empty = cookie auth)
+  - `enable_logguard`: Enables logging protection (true/false)
+  - `close_circuits`: Automatically closes suspicious circuits
+  - `enable_pathverify`: Verifies path selection to detect manipulation
+  - `one_shot_vanguards`: Regenerates guards on restart
+  - `loglevel`: Log verbosity level (NOTICE, INFO, DEBUG)
+
+- **[Vanguards]**
+  - `layer1_lifetime_days`: How often to rotate entry guards (lower = more secure)
+  - `max_layer2_lifetime_hours`: Maximum time to keep middle-layer guards
+  - `max_layer3_lifetime_hours`: Maximum time to keep exit-layer guards
+  - `min_layer2_lifetime_hours`: Minimum time before replacing middle-layer guards
+  - `min_layer3_lifetime_hours`: Minimum time before replacing exit-layer guards
+  - `num_layer1_guards`: Number of entry guards (more = more secure)
+  - `num_layer2_guards`: Number of middle-layer guards (more = more secure)
+  - `num_layer3_guards`: Number of exit-layer guards (more = more secure)
+
+- **[Bandguards]**
+  - `circ_max_age_hours`: Maximum circuit lifetime (lower = more secure)
+  - `circ_max_hsdesc_kilobytes`: Maximum descriptor download size before circuit closure
+  - `circ_max_serv_intro_kilobytes`: Maximum intro point traffic before circuit closure  
+  - `circ_max_megabytes`: Bandwidth limits for circuits (lower = more secure)
+  - `circ_max_disconnected_secs`: Closes circuits after this many seconds of disconnection
+  - `conn_max_disconnected_secs`: Closes connections after this many seconds of disconnection
+
+- **[Rendguard]**
+  - `rend_use_max_use_to_bw_ratio`: Limits excessive use of rendezvous points
+  - `rend_use_max_consensus_weight_churn`: Limits changes in consensus weight
+  - `rend_use_close_circuits_on_overuse`: Closes circuits when rendezvous points are overused
+  - `rend_use_global_start_count`: Minimum consensus count before enabling protections
+  - `rend_use_relay_start_count`: Minimum relay consensus count before monitoring
+  - `rend_use_scale_at_count`: Consensus count threshold for scaling protection
+
+- **[Logguard]**
+  - `log_protocol_warns`: Enables warning on protocol anomalies
+  - `log_dump_limit`: Maximum number of log lines to dump on anomaly detection
+  - `log_dump_level`: Verbosity of logs (NOTICE or DEBUG in max security)
+
+> **Security Note**: High-risk services like whistleblower sites, dissident platforms, or sites facing state-level adversaries should use the max security configuration. This offers significantly stronger protection against sophisticated attackers at the cost of some performance.
 
 ## Building from Source
 
