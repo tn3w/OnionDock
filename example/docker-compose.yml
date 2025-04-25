@@ -1,9 +1,12 @@
 services:
   tor:
-    image: tn3w/oniondock:latest
+    build:
+      context: ../tor
+      dockerfile: Dockerfile
     environment:
       - SECURITY_LEVEL=high
       - TOR_SERVICE_PORTS=80:webapp:80
+      - TOR_TRANSPORT_TYPE=snowflake
     volumes:
       - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
     restart: unless-stopped

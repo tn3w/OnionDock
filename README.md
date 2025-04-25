@@ -1,4 +1,3 @@
-```
              @@@@@                                                                
        @@@@@@@@@@@@@@@@@                                                          
     @@@@@@@@@@@@@@@   @@@@@                                                       
@@ -32,6 +31,7 @@
   - [Add a Database Service](#add-a-database-service)
 - [Configuration](#configuration)
   - [Security Levels](#security-levels)
+  - [Pluggable Transports](#pluggable-transports)
   - [Advanced Tor Configuration](#advanced-tor-configuration)
   - [Vanguards Configuration](#vanguards-configuration)
 - [Building from Source](#building-from-source)
@@ -42,6 +42,7 @@
   - [Code Formatting](#code-formatting)
   - [Project Structure](#project-structure)
 - [Security Considerations](#security-considerations)
+  - [Best Practices for Using Bridges](#best-practices-for-using-bridges)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -56,6 +57,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
   - Hardened Tor instance with security best practices
   - Automatically rotates guard nodes to prevent long-term correlation attacks
   - Includes protection against many common Tor attacks
+  - **Pluggable Transports**: Support for obfs4 and Snowflake transports to improve resistance against traffic analysis and censorship
 
 - **Official Security Enhancements**:
   - **Vanguards**: Protection against guard discovery attacks
@@ -63,6 +65,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
   - **RendGuard**: Protection against rendezvous point enumeration attacks
   - **CbtVerify**: Detection of circuit build time anomalies
   - **DropTimeouts**: Dropping circuits that timeout in certain states
+  - **Bridge Support**: Protection against network-level attackers and traffic correlation through obfs4 and Snowflake with optimized IAT (Inter-Arrival Time) modes
 
 - **Performance Optimized**: 
   - Automatic multi-threading for improved Tor performance
@@ -90,6 +93,7 @@ OnionDock provides a pre-configured Docker environment with a hardened Tor insta
 OnionDock consists of the following components:
 
 - **Tor Service**: A hardened Tor instance with enhanced security modules
+  - **Pluggable Transport Layer**: Optional obfs4 or Snowflake transports for improved traffic obfuscation and censorship resistance
 - **Vanguards Addon**: 
   - Official security implementation from the [Vanguards](https://github.com/mikeperry-tor/vanguards) project
   - Components (Vanguards, BandGuards, RendGuards) run in parallel processes for better performance
@@ -109,8 +113,13 @@ graph LR
             Tor[("Tor Daemon")]
             style Tor fill:#6d214f,stroke:#b33939,stroke-width:2px,color:#ffd1dc
             
+            PT["Pluggable Transport<br>(Snowflake/obfs4)"]
+            style PT fill:#4a235a,stroke:#9b59b6,stroke-width:1px,color:#e8daef
+            
             VG["Vanguards"]
             style VG fill:#3c162f,stroke:#e84393,stroke-width:1px,color:#ffb8d9,shape:hexagon
+            
+            Tor --- PT
         end
         
         App["Your App"]
@@ -156,6 +165,16 @@ OnionDock includes the official [Vanguards](https://github.com/mikeperry-tor/van
     - **RendGuards Module**: Protects against rendezvous point enumeration
 
 The Tor service is hardened with these security enhancements while maintaining compatibility with any containerized web application, providing strong security with minimal configuration.
+
+**Pluggable Transports**
+
+OnionDock integrates pluggable transports to enhance resistance against network-level adversaries and traffic analysis:
+
+- **How it works in OnionDock:**
+  - Configurable transport type via `TOR_TRANSPORT_TYPE` environment variable
+  - Automatically configures and optimizes bridge connections
+  - Enforces recommended security settings (like IAT mode 2 for obfs4)
+  - Provides additional protection layers against traffic correlation attacks
 
 ## Getting Started
 
@@ -251,6 +270,10 @@ To deploy your own application with OnionDock, follow these steps:
          # Format: TOR_PORT:SERVICE_NAME:SERVICE_PORT
          # Multiple services can be comma-separated
          - TOR_SERVICE_PORTS=80:your-app-service:3000
+         # Optional: Set the transport type (none, snowflake, obfs4)
+         - TOR_TRANSPORT_TYPE=snowflake
+         # Optional: Set the security level (high, medium, low)
+         - SECURITY_LEVEL=high
        volumes:
          - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
        restart: unless-stopped
@@ -328,6 +351,40 @@ services:
       - TOR_SERVICE_PORTS=80:webapp:8080
     # ...other configuration
 ```
+
+### Pluggable Transports
+
+OnionDock supports pluggable transports to enhance protection against traffic analysis and network-level adversaries. This is configured through the `TOR_TRANSPORT_TYPE` environment variable.
+
+- `TOR_TRANSPORT_TYPE`: Type of pluggable transport to use (default: snowflake)
+  - `none`: No pluggable transport, direct Tor connection
+  - `snowflake`: Use Snowflake bridges for additional protection against traffic analysis and correlation attacks
+  - `obfs4`: Use obfs4 for enhanced traffic obfuscation with IAT (Inter-Arrival Time) protections
+  - `conjure`: Experimental support for Conjure transport
+
+Example docker-compose.yml with transport configuration:
+```yaml
+services:
+  tor:
+    image: oniondock:latest
+    environment:
+      - TOR_SERVICE_PORTS=80:webapp:8080
+      - TOR_TRANSPORT_TYPE=obfs4  # Options: none, snowflake, obfs4, conjure
+    # ...other configuration
+```
+
+**Transport Type Comparison:**
+
+| Transport | Traffic Analysis Protection | Connection Resilience | Correlation Attack Resistance | Good For |
+|-----------|----------------------------|---------------------|---------------------------|----------|
+| none      | ❌ None                     | ❌ Basic             | ❌ Vulnerable               | Lower latency when advanced security is not a concern |
+| snowflake | ⚠️ Basic                   | ✅ Excellent        | ✅ Good                     | Protection against connection disruption attacks, can resume through different paths |
+| obfs4     | ✅ Excellent (with IAT=2)   | ⚠️ Limited          | ✅ Excellent                | Protection against sophisticated traffic analysis, timing attacks, and fingerprinting |
+| conjure   | ⚠️ Basic                   | ⚠️ Basic            | ⚠️ Basic                   | Experimental use cases with specialized needs |
+
+OnionDock automatically configures the optimal settings for each transport, including:
+- For obfs4: Setting iat-mode=2 for maximum protection against timing analysis
+- For snowflake: Using optimized connection parameters for resiliency against disruption attacks
 
 ### Advanced Tor Configuration
 
@@ -536,6 +593,62 @@ OnionDock/
 - **Isolation**: Run OnionDock on dedicated hardware when possible, especially for sensitive applications.
 - **Backup**: Regularly backup your hidden service keys in a secure location.
 - **Monitoring**: Implement monitoring to detect unusual patterns or potential attacks.
+
+### Best Practices for Using Bridges
+
+Using bridges is a critical security enhancement for Tor hidden services that provides additional protection against traffic analysis by both local and global adversaries.
+
+#### Why Use Bridges
+
+Tor has basic defenses against traffic analysis, but pluggable transports and bridges provide additional protection:
+
+- **Protection Against Correlation Attacks**: Prevents adversaries from confirming service identity by disrupting connections and monitoring service availability
+- **Traffic Analysis Resistance**: Certain bridges (especially obfs4 with IAT mode 2) add obfuscation to make traffic analysis more difficult
+- **Network Adversary Protection**: Makes it harder for local network observers to identify that you're running a Tor hidden service
+- **Improved Circuit Resilience**: Using Snowflake can protect against attacks where an adversary blocks or disrupts Tor circuits
+
+#### Transport Types in OnionDock
+
+OnionDock supports multiple transport types, each with unique security properties:
+
+1. **Snowflake (Default)**:
+   - **Strengths**: Resilient against circuit disruption; can resume circuits via other bridges if one is blocked; excellent at maintaining service availability
+   - **Considerations**: Bridges may have limited capacity; less traffic analysis protection than obfs4
+   - **Best For**: Protection against connection disruption attacks, situations where service reliability is critical
+
+2. **obfs4**:
+   - **Strengths**: Enhanced traffic analysis resistance with IAT mode 2 (enforced in OnionDock); harder for adversaries to use bandwidth side channels and timing attacks
+   - **Considerations**: Less resilient to connection disruption than Snowflake
+   - **Best For**: Protection against sophisticated traffic analysis; environments where traffic pattern obfuscation is critical
+
+3. **none** (direct Tor connection):
+   - **Strengths**: Lower latency, simpler configuration
+   - **Considerations**: No additional protection against traffic analysis or correlation attacks
+   - **Best For**: Testing or environments where external adversaries are not a concern
+
+#### How OnionDock Implements Bridges
+
+OnionDock automatically sets up the optimal configuration for each transport type:
+
+- For **obfs4**: OnionDock enforces iat-mode=2, which is the recommended setting for hidden services as it injects traffic timing changes to outgoing traffic
+- For **Snowflake**: OnionDock configures the connection parameters for optimal resilience against circuit disruption
+- Bridge selection is randomized from a curated list to distribute load and enhance security
+
+#### When to Use Which Transport
+
+- **High-Risk Services** (whistleblower platforms, dissident websites):
+  - Use `obfs4` with `SECURITY_LEVEL=high` for maximum protection against traffic analysis
+  - Consider running your own bridges in addition to using OnionDock
+
+- **Services Requiring High Availability**:
+  - Use `snowflake` for maximum resilience against circuit disruption attacks
+  - Combine with a high security level for critical services
+
+- **Low-Risk or Testing Services**:
+  - `none` may be sufficient for development or services with minimal security concerns
+
+- **Enterprise or High-Traffic Services**:
+  - Consider using `obfs4` with a medium security level to balance performance and security
 
 ## Contributing
 

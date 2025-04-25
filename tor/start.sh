@@ -2,25 +2,19 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-echo "             @@@@@                                                                "
-echo "       @@@@@@@@@@@@@@@@@                                                          "
-echo "    @@@@@@@@@@@@@@@   @@@@@                                                       "
-echo "  @@@@@@@@@@@@@@ @@@@@@  @@@@                                                     "
-echo " @@@@@@@@@@@@@@@@@@  @@@@  @@@   .d88b.       w             888b.            8    "
-echo " @@@@@@@@@@@@@@@ @@@@  @@@ @@@   8P  Y8 8d8b. w .d8b. 8d8b. 8   8 .d8b. .d8b 8.dP "
-echo "@@@@@@@@@@@@@@@@   @@  @@@  @@@  8b  d8 8P Y8 8 8' .8 8P Y8 8   8 8' .8 8    88b  "
-echo " @@@@@@@@@@@@@@@ @@@@  @@@ @@@   \`Y88P' 8   8 8 \`Y8P' 8   8 888P' \`Y8P' \`Y8P 8 Yb "
-echo " @@@@@@@@@@@@@@@@@@  @@@@ @@@@   ~- By TN3W: https://github.com/tn3w/OnionDock -~ "
-echo "  @@@@@@@@@@@@@@@@@@@@@  @@@                                                      "
-echo "    @@@@@@@@@@@@@@@   @@@@@                                                       "
-echo "       @@@@@@@@@@@@@@@@@                                                          "
-echo ""
+echo ".d88b.       w             888b.            8    "
+echo "8P  Y8 8d8b. w .d8b. 8d8b. 8   8 .d8b. .d8b 8.dP "
+echo "8b  d8 8P Y8 8 8' .8 8P Y8 8   8 8' .8 8    88b  "
+echo "\`Y88P' 8   8 8 \`Y8P' 8   8 888P' \`Y8P' \`Y8P 8 Yb "
 
+TOR_TRANSPORT_TYPE=${TOR_TRANSPORT_TYPE:-"snowflake"}
 TOR_SERVICE_PORTS=${TOR_SERVICE_PORTS:-"80:webapp:80"}
 SECURITY_LEVEL=${SECURITY_LEVEL:-high}
 VANGUARDS_LOCATION="/pypy_venv/bin/vanguards"
+PT_CONFIG_PATH="/etc/tor/pt_config.json"
+PT_PATH="/usr/local/bin/pluggable_transports/"
 
-echo "[+] Starting OnionDock: $SECURITY_LEVEL security with ports: $TOR_SERVICE_PORTS"
+echo "[+] Starting OnionDock: $SECURITY_LEVEL using $TOR_TRANSPORT_TYPE transport with ports: $TOR_SERVICE_PORTS"
 
 cp /etc/tor/torrc /tmp/torrc
 
@@ -35,6 +29,41 @@ sed -i "s/# PORTS/$PORTS_CONFIG/g" /tmp/torrc
 if [ -f "/etc/tor/vanguards.conf" ]; then
     cp /etc/tor/vanguards.conf /tmp/vanguards.conf
     echo "[+] Using vanguards configuration from /etc/tor/vanguards.conf"
+fi
+
+if [ "$TOR_TRANSPORT_TYPE" != "none" ] && [ -f "$PT_CONFIG_PATH" ]; then
+    echo "[+] Setting up $TOR_TRANSPORT_TYPE transport..."
+    
+    case "$TOR_TRANSPORT_TYPE" in
+        "obfs4")
+            PLUGIN_NAME="lyrebird"
+            ;;
+        "snowflake"|"conjure")
+            PLUGIN_NAME="$TOR_TRANSPORT_TYPE"
+            ;;
+        *)
+            PLUGIN_NAME=""
+            ;;
+    esac
+
+    if [ -n "$PLUGIN_NAME" ]; then
+        TRANSPORT_PLUGIN=$(jq -r ".pluggableTransports.$PLUGIN_NAME // empty" "$PT_CONFIG_PATH" | sed "s#\${pt_path}#$PT_PATH#g")
+        BRIDGES=$(jq -r ".bridges.$TOR_TRANSPORT_TYPE[]" "$PT_CONFIG_PATH" 2>/dev/null \
+            | shuf -n 2 \
+            | sed 's/^/Bridge /' \
+            | sed 's/iat-mode=\([01]\)/iat-mode=2/g')
+        
+        echo -e "\n# Pluggable Transport Configuration\nUseBridges 1\n$TRANSPORT_PLUGIN" >> /tmp/torrc
+
+        if [ -n "$BRIDGES" ]; then
+            echo -e "$BRIDGES" >> /tmp/torrc
+            echo "[+] Added $(echo "$BRIDGES" | wc -l) random bridges for $TOR_TRANSPORT_TYPE"
+        else
+            echo "[!] No bridges found for $TOR_TRANSPORT_TYPE"
+        fi
+    else
+        echo "[!] No transport plugin configuration found for $TOR_TRANSPORT_TYPE"
+    fi
 fi
 
 echo "[+] Starting Tor hidden service..."
