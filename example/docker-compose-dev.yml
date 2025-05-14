@@ -1,0 +1,34 @@
+services:
+  tor:
+    image: oniondock
+    build:
+      context: ./tor
+      dockerfile: Dockerfile
+      # or: dockerfile: Dockerfile.tor-from-source
+      args:
+        - DOCKER_BUILDKIT=1
+    volumes:
+      - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
+    restart: unless-stopped
+    networks:
+      - onion_network
+    depends_on:
+      - webapp
+
+  webapp:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app:ro
+    networks:
+      - onion_network
+    restart: unless-stopped
+    # Port exposure is optional since Tor will access it 
+    # through the internal network
+    # ports:
+    #   - "5000:80"
+
+networks:
+  onion_network:
+    driver: bridge

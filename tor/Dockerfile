@@ -9,7 +9,9 @@ RUN apk add --no-cache \
     pypy3 \
     shadow \
     jq \
-    curl
+    curl \
+    gcompat \
+    libc6-compat
 
 RUN mkdir -p /tmp/tor-bundle && \
     cd /tmp/tor-bundle && \

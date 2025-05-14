@@ -8,7 +8,9 @@ RUN apk add --no-cache \
     build-base automake autoconf libtool pkgconfig libevent-dev openssl-dev zlib-dev xz-dev \
     pypy3 \
     jq \
-    curl
+    curl \
+    gcompat \
+    libc6-compat
 
 RUN mkdir -p /tmp/tor-bundle && \
     cd /tmp/tor-bundle && \
