@@ -33,7 +33,7 @@ fi
 
 if [ "$TOR_TRANSPORT_TYPE" != "none" ] && [ -f "$PT_CONFIG_PATH" ]; then
     echo "[+] Setting up $TOR_TRANSPORT_TYPE transport..."
-    
+
     case "$TOR_TRANSPORT_TYPE" in
         "obfs4")
             PLUGIN_NAME="lyrebird"
@@ -49,10 +49,10 @@ if [ "$TOR_TRANSPORT_TYPE" != "none" ] && [ -f "$PT_CONFIG_PATH" ]; then
     if [ -n "$PLUGIN_NAME" ]; then
         TRANSPORT_PLUGIN=$(jq -r ".pluggableTransports.$PLUGIN_NAME // empty" "$PT_CONFIG_PATH" | sed "s#\${pt_path}#$PT_PATH#g")
         BRIDGES=$(jq -r ".bridges.$TOR_TRANSPORT_TYPE[]" "$PT_CONFIG_PATH" 2>/dev/null \
-            | shuf -n 2 \
-            | sed 's/^/Bridge /' \
+                | shuf -n 2 \
+                | sed 's/^/Bridge /' \
             | sed 's/iat-mode=\([01]\)/iat-mode=2/g')
-        
+
         echo -e "\n# Pluggable Transport Configuration\nUseBridges 1\n$TRANSPORT_PLUGIN" >> /tmp/torrc
 
         if [ -n "$BRIDGES" ]; then
