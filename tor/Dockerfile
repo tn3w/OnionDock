@@ -56,7 +56,6 @@ LABEL org.opencontainers.image.title="OnionDock" \
       org.opencontainers.image.licenses="Apache-2.0"
 
 RUN apk add --no-cache tini tor python3 && \
-    adduser -D -H -s /bin/false -h /var/lib/tor tor && \
     install -d -o tor -g tor -m 0700 /var/lib/tor /var/lib/tor/hidden_service /run/tor
 
 COPY --from=builder /venv /venv
