@@ -1,66 +1,83 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
     <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>OnionDock Example</title>
         <style>
-            body {
-                font-family: sans-serif;
-                background-color: #121212;
-                color: #E0E0E0;
-                text-align: center;
-                margin: 0;
-                padding: 0 20px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
+            :root {
+                color-scheme: dark;
+                --bg: #121212;
+                --fg: #e0e0e0;
+                --mute: #ababab;
+                --accent: #b76fd1;
+                --card: #1e1e1e;
             }
-            .content {
-                max-width: 600px;
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 2rem;
+                font:
+                    1rem/1.5 system-ui,
+                    sans-serif;
+                background: var(--bg);
+                color: var(--fg);
+            }
+            main {
+                max-width: 36rem;
+                text-align: center;
             }
             h1 {
-                color: #B76FD1;
+                color: var(--accent);
+                margin: 0 0 1rem;
             }
             p {
-                color: #ABABAB;
+                color: var(--mute);
+                margin: 0 0 0.75rem;
             }
             a {
-                color: #B76FD1;
-                text-decoration: underline;
+                color: var(--accent);
             }
-            .onion-address {
-                background-color: #2A2A2A;
-                padding: 10px;
-                border-radius: 5px;
-                font-family: monospace;
+            code {
+                display: block;
+                margin-top: 1.5rem;
+                padding: 0.75rem 1rem;
+                background: var(--card);
+                border-radius: 0.5rem;
+                font-family: ui-monospace, monospace;
                 text-align: left;
-                margin-top: 20px;
+                overflow-x: auto;
             }
-            .tor-icon {
-                width: 80px;
-                height: 80px;
-                background-color: #9B59B6;
-                border-radius: 50%;
-                margin: 0 auto 20px;
+            svg {
+                width: 5rem;
+                height: 5rem;
+                margin-bottom: 1.5rem;
             }
         </style>
     </head>
     <body>
-        <div class="content">
-            <svg viewBox="0 0 512 512" width="80" height="80" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 20px; display: block;">
-                <circle fill="#9B59B6" cx="256" cy="256" r="256"/>
-                <path d="M256.5,465.4v-31c98.3-0.3,177.9-80.1,177.9-178.4c0-98.4-79.6-178.1-177.9-178.4v-31c115.4,0.3,208.9,93.9,208.9,209.4 C465.4,371.5,372,465.2,256.5,465.4z" fill="#FFFFFF"/>
-                <path d="M256.5,356.8c55.4-0.3,100.3-45.3,100.3-100.8c0-55.5-44.9-100.5-100.3-100.8v-31c72.6,0.3,131.4,59.2,131.4,131.8 c0,72.7-58.8,131.6-131.4,131.9V356.8z" fill="#FFFFFF"/>
-                <path d="M256.5,201.7c29.7,0.3,53.8,24.5,53.8,54.3c0,29.8-24,54-53.8,54.3V201.7z" fill="#FFFFFF"/>
-                <path d="M256,0 A256,256 0 0 0 256,512 Z" fill="#9B59B6" />
+        <main>
+            <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="256" cy="256" r="256" fill="#9b59b6" />
+                <path
+                    fill="#fff"
+                    d="M256.5 465.4v-31a178.4 178.4 0 0 0 0-356.8v-31a209.4 209.4 0 0 1 0 418.8z"
+                />
+                <path
+                    fill="#fff"
+                    d="M256.5 356.8a100.8 100.8 0 0 0 0-201.6v-31a131.8 131.8 0 0 1 0 263.6z"
+                />
+                <path fill="#fff" d="M256.5 201.7a54.3 54.3 0 0 1 0 108.6z" />
             </svg>
             <h1>Hello, Tor!</h1>
-            <p>This is a simple example application deployed with OnionDock.</p>
-            <p>Your web application is now securely accessible as a Tor Hidden Service.</p>
-            <p><a href="https://github.com/tn3w/OnionDock">GitHub: tn3w/OnionDock</a></p>
-            <div class="onion-address">
-                <code>docker compose logs tor | grep "Tor hidden service"</code>
-            </div>
-        </div>
+            <p>This page is served as a Tor v3 hidden service via OnionDock.</p>
+            <p>Source: <a href="https://github.com/tn3w/OnionDock">github.com/tn3w/OnionDock</a></p>
+            <code>docker compose exec tor cat /var/lib/tor/hidden_service/hostname</code>
+        </main>
     </body>
 </html>

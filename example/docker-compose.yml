@@ -16,16 +16,9 @@ services:
   webapp:
     build:
       context: ./app
-      dockerfile: Dockerfile
-    volumes:
-      - ./app:/app:ro
     networks:
       - onion_network
     restart: unless-stopped
-    # Port exposure is optional since Tor will access it 
-    # through the internal network
-    # ports:
-    #   - "5000:80"
 
 networks:
   onion_network:

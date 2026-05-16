@@ -2,11 +2,11 @@ services:
   tor:
     image: oniondock
     build:
-      context: ./tor
-      dockerfile: Dockerfile
-      # or: dockerfile: Dockerfile.tor-from-source
-      args:
-        - DOCKER_BUILDKIT=1
+      context: ../tor
+    environment:
+      - SECURITY_LEVEL=high
+      - TOR_SERVICE_PORTS=80:webapp:80
+      - TOR_TRANSPORT_TYPE=snowflake
     volumes:
       - ./data/tor/hidden_service:/var/lib/tor/hidden_service:rw
     restart: unless-stopped
@@ -18,16 +18,9 @@ services:
   webapp:
     build:
       context: ./app
-      dockerfile: Dockerfile
-    volumes:
-      - ./app:/app:ro
     networks:
       - onion_network
     restart: unless-stopped
-    # Port exposure is optional since Tor will access it 
-    # through the internal network
-    # ports:
-    #   - "5000:80"
 
 networks:
   onion_network:

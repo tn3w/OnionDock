@@ -1,35 +1,25 @@
-HardwareAccel 1
-AvoidDiskWrites 1
-
-StrictNodes 1
-SafeSocks 1
-ConnectionPadding 1
-ReducedConnectionPadding 0
-CircuitPadding 1
-ReducedCircuitPadding 0
+SocksPort 0
+ORPort 0
+DirPort 0
+ExitRelay 0
+BridgeRelay 0
+PublishServerDescriptor 0
 
 HiddenServiceDir /var/lib/tor/hidden_service
 HiddenServiceVersion 3
+HiddenServiceEnableIntroDoSDefense 1
+HiddenServicePoWDefensesEnabled 1
 # PORTS
 
 DataDirectory /var/lib/tor
 
-ControlPort 9051
+ControlPort 127.0.0.1:9051
 CookieAuthentication 1
-CookieAuthFile /var/lib/tor/control_auth_cookie
-DisableDebuggerAttachment 1
+CookieAuthFile /run/tor/control_auth_cookie
+
+SafeLogging 1
+ConnectionPadding 1
+CircuitPadding 1
 
 Log notice stdout
-SafeLogging 1
-
-ClientRejectInternalAddresses 1
-NewCircuitPeriod 30
-MaxCircuitDirtiness 600
-EnforceDistinctSubnets 1
-CellStatistics 0
-DirReqStatistics 0
-EntryStatistics 0
-ExitPortStatistics 0
-ConnDirectionStatistics 0
-HiddenServiceStatistics 0
-ExtraInfoStatistics 0
+Log notice file /var/lib/tor/notices.log
