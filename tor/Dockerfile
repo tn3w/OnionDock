@@ -22,7 +22,7 @@ RUN set -eux; \
     BASE="https://dist.torproject.org/torbrowser/${V}/tor-expert-bundle-linux-x86_64-${V}.tar.gz"; \
     curl -fsSL "$BASE"     -o bundle.tar.gz; \
     curl -fsSL "$BASE.asc" -o bundle.tar.gz.asc; \
-    gpg --batch --verify bundle.tar.gz.asc bundle.tar.gz; \
+    gpg --batch --trust-model always --verify bundle.tar.gz.asc bundle.tar.gz; \
     tar -xzf bundle.tar.gz tor/pluggable_transports; \
     rm -rf "$GNUPGHOME" bundle.tar.gz bundle.tar.gz.asc; \
     find tor/pluggable_transports -type f -executable \
@@ -44,7 +44,7 @@ RUN python3 -m venv --copies /venv && \
         /tmp/vg/src/vanguards/config.py && \
     /venv/bin/pip install --no-cache-dir --no-deps /tmp/vg && \
     /venv/bin/python -m compileall -q /venv && \
-    /venv/bin/pip uninstall -y pip setuptools && \
+    /venv/bin/pip uninstall -y pip && \
     rm -rf /venv/bin/pip* /venv/bin/easy_install* /root/.cache
 
 
@@ -55,7 +55,8 @@ LABEL org.opencontainers.image.title="OnionDock" \
       org.opencontainers.image.source="https://github.com/tn3w/OnionDock" \
       org.opencontainers.image.licenses="Apache-2.0"
 
-RUN apk add --no-cache tini tor python3 && \
+RUN apk upgrade --no-cache && \
+    apk add --no-cache tini tor python3 && \
     install -d -o tor -g tor -m 0700 /var/lib/tor /var/lib/tor/hidden_service /run/tor
 
 COPY --from=builder /venv /venv
@@ -66,6 +67,8 @@ COPY --chmod=0555 oniondock.py /usr/local/bin/oniondock
 RUN set -eux; \
     mv /usr/local/bin/pluggable_transports/pt_config.json /etc/tor/pt_config.json; \
     chmod 0444 /etc/tor/pt_config.json; \
+    rm -f /usr/local/bin/pluggable_transports/*.md \
+          /usr/local/bin/pluggable_transports/conjure-client; \
     chmod 0555 /usr/local/bin/pluggable_transports/*; \
     find / -xdev -type f \( -perm -4000 -o -perm -2000 \) -exec chmod ug-s {} + 2>/dev/null || true; \
     rm -rf /var/cache/apk/* /tmp/*

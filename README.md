@@ -13,7 +13,7 @@
        @@@@@@@@@@@@@@@@@
 ```
 
-Hardened Tor v3 hidden-service container. Bundles tor + [vanguards](https://github.com/mikeperry-tor/vanguards) (guard/band/rend) + pluggable transports (obfs4, snowflake, conjure). Non-root, single Python entrypoint, GPG-verified bundle, SHA-pinned vanguards.
+Hardened Tor v3 hidden-service container. Bundles tor + [vanguards](https://github.com/mikeperry-tor/vanguards) (guard/band/rend) + pluggable transports (obfs4, snowflake). Non-root, single Python entrypoint, GPG-verified bundle, SHA-pinned vanguards.
 
 ## Quick start
 
@@ -47,7 +47,7 @@ Mounted volume = onion key. Back it up. Lose it → lose the address.
 | Env                  | Default        | Values                                  |
 | -------------------- | -------------- | --------------------------------------- |
 | `SECURITY_LEVEL`     | `high`         | `high` / `medium` / `low`               |
-| `TOR_TRANSPORT_TYPE` | `snowflake`    | `snowflake`, `obfs4`, `conjure`, `none` |
+| `TOR_TRANSPORT_TYPE` | `snowflake`    | `snowflake`, `obfs4`, `none`            |
 | `TOR_SERVICE_PORTS`  | `80:webapp:80` | `outer:host:inner[,…]`                  |
 
 Custom vanguards: bind-mount `/etc/tor/vanguards.conf` (else upstream defaults).

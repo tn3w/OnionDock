@@ -25,7 +25,7 @@ TRANSPORT = os.environ.get("TOR_TRANSPORT_TYPE", "snowflake")
 PORTS = os.environ.get("TOR_SERVICE_PORTS", "80:webapp:80")
 LEVEL = os.environ.get("SECURITY_LEVEL", "high")
 
-PLUGINS = {"obfs4": "lyrebird", "snowflake": "snowflake", "conjure": "conjure"}
+PLUGINS = {"obfs4": "lyrebird", "snowflake": "snowflake"}
 PORT_RE = re.compile(r"^(\d{1,5}):([A-Za-z0-9._-]+):(\d{1,5})$")
 
 VG_PROFILES = {
